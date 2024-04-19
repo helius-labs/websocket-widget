@@ -1,18 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import TransactionNotificationCard from "@/components/TransactionNotification";
-import base58 from "base58";
 import { PublicKey } from "@solana/web3.js";
-
-// Singleton WebSocket Connection
-let singleWebSocket = null;
-
-const getWebSocket = () => {
-  if (!singleWebSocket || singleWebSocket.readyState === WebSocket.CLOSED) {
-    singleWebSocket = new WebSocket('wss://atlas-mainnet.helius-rpc.com/?api-key=');
-  }
-  return singleWebSocket;
-};
-
 
 export default function Home() {
   const ws = useRef(null);
@@ -50,71 +38,58 @@ export default function Home() {
       alert('Invalid Solana address');
     }
   };  
+
+  const cloeWebSocket = useCallback(() => {
+    if (ws.current) {
+      ws.current.close();
+      ws.current = null;
+      setIsConnected(false);
+      console.log('WebSocket is closed.');
+    }
+  });
   
   const sendRequest = useCallback(() => {
-    ws.current = getWebSocket();
+    const request = {
+      jsonrpc: "2.0",
+      id: 420,
+      method: "transactionSubscribe",
+      params: [
+        {
+          accountInclude: accountsIncluded,
+          accountRequire: accountsRequired
+        },
+        {
+          commitment: commitmentState,
+          encoding: encoding,
+          transactionDetails: details,
+          showRewards: true,
+          maxSupportedTransactionVersion: 1
+        }
+      ]
+    };
 
-    setTimeout(() => {}, 2000)
-
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      const request = {
-        jsonrpc: "2.0",
-        id: 420,
-        method: "transactionSubscribe",
-        params: [
-          {
-            accountInclude: accountsIncluded,
-            accountRequire: accountsRequired
-          },
-          {
-            commitment: commitmentState,
-            encoding: encoding,
-            transactionDetails: details,
-            showRewards: true,
-            maxSupportedTransactionVersion: 1
-          }
-        ]
+    if (!ws.current) {
+      // Open WebSocket
+      ws.current = new WebSocket('wss://atlas-mainnet.helius-rpc.com?api-key=ad533ef6-a2eb-4b8d-a527-331443482543');
+      ws.current.onopen = () => {
+        console.log('WebSocket is open');
+        ws.current.send(JSON.stringify(request));
+        setIsConnected(true);
       };
+    } else {
       ws.current.send(JSON.stringify(request));
       setIsConnected(true);
-    } else {
-      console.log('WebSocket is not open');
     }
-  }, [accountsIncluded, accountsRequired, commitmentState, details, encoding]);
-
-
-  useEffect(() => {
-    ws.current = getWebSocket();
-
-    ws.current.onopen = () => {
-      console.log('WebSocket is open');
-    };
-
-    ws.current.onclose = () => {
-      console.log('WebSocket is closed');
-      setIsConnected(false);
-    };
-
-    ws.current.onerror = (error) => {
-      console.log('WebSocket error:', error);
-      setIsConnected(false);
-    };
-
-    return () => {
-      ws.current.close();
-    };
-  }, []);
-
-
-  useEffect(() => {
     ws.current.onmessage = (event) => {
       const message = JSON.parse(event.data);
       setNotifications((prevNotifications) => [...prevNotifications, message]);
-    };
-  }, []);
+    };  
+  }, [accountsIncluded, accountsRequired, commitmentState, details, encoding]);
 
   useEffect(() => {
-    ws.current.onclose = () => {setIsConnected(false); console.log('WebSocket is closed');};
+    if (ws.current) {
+      ws.current.onclose = () => {setIsConnected(false); console.log('WebSocket is closed');};
+    }
   }, []);
 
 
@@ -232,8 +207,7 @@ export default function Home() {
       ) : (
         <button
           className="w-48 bg-red-500 text-white p-2 rounded shadow hover:bg-red-600 transition-colors"
-          onClick={ws.current.close()}
-        >
+         onClick={cloeWebSocket}>
           Close WebSocket
         </button>
       )}
