@@ -70,7 +70,7 @@ export default function Home() {
 
     if (!ws.current) {
       // Open WebSocket
-      ws.current = new WebSocket('wss://atlas-mainnet.helius-rpc.com?api-key=ad533ef6-a2eb-4b8d-a527-331443482543');
+      ws.current = new WebSocket('wss://atlas-mainnet.helius-rpc.com?api-key=');
       ws.current.onopen = () => {
         console.log('WebSocket is open');
         ws.current.send(JSON.stringify(request));
