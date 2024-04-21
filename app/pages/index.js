@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { Switch } from '@headlessui/react'
+import { ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { Switch } from "@headlessui/react";
 
-function classNames(...classes) {
-    return classes.filter(Boolean).join(' ')
-}
+const classNames = (...classes) => {
+    return classes.filter(Boolean).join(' ');
+};
 
 export default function Home() {
     const ws = useRef(null);
@@ -14,9 +14,9 @@ export default function Home() {
     const [address, setAddress] = useState('');
     const [isRequired, setIsRequired] = useState(false);
     const [addresses, setAddresses] = useState([])
-    const [commitmentState, setCommitmentState] = useState('confirmed');
-    const [details, setDetails] = useState('full');
-    const [encoding, setEncoding] = useState('base58');
+    const [commitmentState, setCommitmentState] = useState("confirmed");
+    const [details, setDetails] = useState("full");
+    const [encoding, setEncoding] = useState("base58");
     const [apiKey, setApiKey] = useState("");
 
     // Function to validate Solana address
