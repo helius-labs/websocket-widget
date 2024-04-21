@@ -18,11 +18,10 @@ export default function Home() {
     const [addresses, setAddresses] = useState([])
     const [accountsRequired, setAccountsRequired] = useState([]);
     const [accountsIncluded, setAccountsIncluded] = useState([]);
-
-
     const [commitmentState, setCommitmentState] = useState('confirmed');
     const [details, setDetails] = useState('full');
     const [encoding, setEncoding] = useState('base58');
+    const [apiKey, setApiKey] = useState("");
 
     // Function to validate Solana address
     // Function to validate Solana address
@@ -112,7 +111,8 @@ export default function Home() {
 
         if (!ws.current) {
             // Open WebSocket
-            ws.current = new WebSocket('wss://atlas-mainnet.helius-rpc.com?api-key=23aabe59-1cbe-4b31-91da-0ae23a590bdc');
+            const wsUrl = `wss://atlas-mainnet.helius-rpc.com?api-key=${apiKey}`;
+            ws.current = new WebSocket(wsUrl);
             ws.current.onopen = () => {
                 console.log('WebSocket is open');
                 ws.current.send(JSON.stringify(request));
@@ -126,7 +126,7 @@ export default function Home() {
             const message = JSON.parse(event.data);
             setNotifications((prevNotifications) => [...prevNotifications, message]);
         };
-    }, [accountsIncluded, accountsRequired, commitmentState, details, encoding]);
+    }, [apiKey, accountsIncluded, accountsRequired, commitmentState, details, encoding]);
 
     useEffect(() => {
         if (ws.current) {
@@ -134,7 +134,13 @@ export default function Home() {
         }
     }, []);
 
+    useEffect(() => {
+        console.log(apiKey);  // This will log the updated value of apiKey whenever it changes
+    }, [apiKey]);  // Dependency array, useEffect runs when apiKey changes
+
     // JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
+
+    // 23aabe59-1cbe-4b31-91da-0ae23a590bdc
 
     return (
 
@@ -185,8 +191,21 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-12">
+                    <div className="sm:col-span-6 sm:col-start-4">
+                        <label className="block text-sm font-medium leading-6 text-white">
+                            Helius API Key
+                        </label>
+                        <div className="mt-2">
+                            <input
+                                value={apiKey}
+                                onChange={event => setApiKey(event.target.value)}
+                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                            />
+                        </div>
+                    </div>
+
                     <div className="sm:col-span-4 sm:col-start-4">
-                        <label htmlFor="street-address" className="block text-sm font-medium leading-6 text-white">
+                        <label className="block text-sm font-medium leading-6 text-white">
                             Solana Address
                         </label>
                         <div className="mt-2">
@@ -240,7 +259,7 @@ export default function Home() {
                             <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-52 overflow-y-scroll">
                                 {addresses.length === 0
                                     ? (
-                                        <div className="h-full flex flex-col items-center justify-center text-center gap-y-2 text-white/30 border border-dashed border-white/10 rounded-md w-64 h-5/6 mx-auto translate-y-4 bg-gray-500/5">
+                                        <div className="flex flex-col items-center justify-center text-center gap-y-2 text-white/30 border border-dashed border-white/10 rounded-md w-64 h-5/6 mx-auto translate-y-4 bg-gray-500/5">
                                             <CubeTransparentIcon className="w-8" />
                                             Enter an address<br /> to get started
                                         </div>
