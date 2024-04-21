@@ -84,6 +84,15 @@ export default function Home() {
     });
 
     const sendRequest = useCallback(() => {
+        const { accountsRequired, accountsIncluded } = addresses.reduce((acc, item) => {
+            if (item.required) {
+                acc.accountsRequired.push(item.address);
+            } else {
+                acc.accountsIncluded.push(item.address);
+            }
+            return acc;
+        }, { accountsRequired: [], accountsIncluded: [] });
+
         const request = {
             jsonrpc: "2.0",
             id: 420,
@@ -129,7 +138,6 @@ export default function Home() {
     }, []);
 
     return (
-
         <>
             <div className="relative isolate px-6 pt-6 lg:px-8">
                 <div
