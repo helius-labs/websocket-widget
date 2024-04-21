@@ -1,101 +1,144 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useId } from "react";
 import TransactionNotificationCard from "@/components/TransactionNotification";
+import base58 from "base58";
 import { PublicKey } from "@solana/web3.js";
+import { ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import { Switch } from '@headlessui/react'
+
+function classNames(...classes) {
+    return classes.filter(Boolean).join(' ')
+}
 
 export default function Home() {
-  const ws = useRef(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [address, setAddress] = useState('');
-  const [isRequired, setIsRequired] = useState(null);
-  const [accountsRequired, setAccountsRequired] = useState([]);
-  const [accountsIncluded, setAccountsIncluded] = useState([]);
-  const [commitmentState, setCommitmentState] = useState('confirmed');
-  const [details, setDetails] = useState('full');
-  const [encoding, setEncoding] = useState('base58');
+    const ws = useRef(null);
+    const [isConnected, setIsConnected] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [address, setAddress] = useState('');
+    const [isRequired, setIsRequired] = useState(false);
+    const [addresses, setAddresses] = useState([])
+    const [accountsRequired, setAccountsRequired] = useState([]);
+    const [accountsIncluded, setAccountsIncluded] = useState([]);
 
-  // Function to validate Solana address
-  const isValidSolanaAddress = (address) => {
-    try {
-      const pubkey = new PublicKey(address);
-      return pubkey.toBase58().length === 43;
-    } catch (error) {
-      return false;
-    }
-  };
 
-  // Handle adding addresses
-  const addAddress = () => {
-    if (address && isValidSolanaAddress(address)) {
-      if (isRequired) {
-        setAccountsRequired([...accountsRequired, address]);
-      } else {
-        setAccountsIncluded([ ...accountsIncluded, address]);
-      }
-      setAddress('');
-      setIsRequired(null);
-    } else {
-      alert('Invalid Solana address');
-    }
-  };  
+    const [commitmentState, setCommitmentState] = useState('confirmed');
+    const [details, setDetails] = useState('full');
+    const [encoding, setEncoding] = useState('base58');
 
-  const cloeWebSocket = useCallback(() => {
-    if (ws.current) {
-      ws.current.close();
-      ws.current = null;
-      setIsConnected(false);
-      console.log('WebSocket is closed.');
-    }
-  });
-  
-  const sendRequest = useCallback(() => {
-    const request = {
-      jsonrpc: "2.0",
-      id: 420,
-      method: "transactionSubscribe",
-      params: [
-        {
-          accountInclude: accountsIncluded,
-          accountRequire: accountsRequired
-        },
-        {
-          commitment: commitmentState,
-          encoding: encoding,
-          transactionDetails: details,
-          showRewards: true,
-          maxSupportedTransactionVersion: 1
+    // Function to validate Solana address
+    // Function to validate Solana address
+    const validateAddress = (address) => {
+        // Check if the address already exists in the array
+        if (addresses.some(item => item.address === address)) {
+            alert("Do not provide duplicate addresses");
+            return false;
+        } else {
+            try {
+                const pubkey = new PublicKey(address);
+                // Check if the encoded address has the typical length of 43 characters
+                if (pubkey.toBase58().length === 43) {
+                    return true;
+                } else {
+                    alert('Invalid Solana address');
+                    return false;
+                }
+            } catch (error) {
+                alert('Invalid Solana address');
+                return false;
+            }
         }
-      ]
     };
 
-    if (!ws.current) {
-      // Open WebSocket
-      ws.current = new WebSocket('wss://atlas-mainnet.helius-rpc.com?api-key=');
-      ws.current.onopen = () => {
-        console.log('WebSocket is open');
-        ws.current.send(JSON.stringify(request));
-        setIsConnected(true);
-      };
-    } else {
-      ws.current.send(JSON.stringify(request));
-      setIsConnected(true);
-    }
-    ws.current.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      setNotifications((prevNotifications) => [...prevNotifications, message]);
-    };  
-  }, [accountsIncluded, accountsRequired, commitmentState, details, encoding]);
 
-  useEffect(() => {
-    if (ws.current) {
-      ws.current.onclose = () => {setIsConnected(false); console.log('WebSocket is closed');};
-    }
-  }, []);
+    // Handle adding addresses
+    const addAddress = () => {
+        if (address && validateAddress(address)) {
+            setAddresses([
+                ...addresses,
+                { address: address, isRequired: isRequired }
+            ])
+        }
 
+        setAddress('');
+        setIsRequired(false);
+    };
 
-  return (
+    // Function to find and remove an address by its 'address' value
+    const removeAddress = (targetAddress) => {
+        // Find the index of the address object
+        const index = addresses.findIndex(item => item.address === targetAddress);
 
-    <>
+        // Check if the address was found (index !== -1)
+        if (index !== -1) {
+            // Remove the address from the array using splice
+            setAddresses(currentAddresses => {
+                const newAddresses = [...currentAddresses];
+                newAddresses.splice(index, 1);
+                return newAddresses;
+            });
+        } else {
+            // Optionally, handle the case where the address is not found
+            console.log("Address not found in the array.");
+        }
+    };
+
+    const cloeWebSocket = useCallback(() => {
+        if (ws.current) {
+            ws.current.close();
+            ws.current = null;
+            setIsConnected(false);
+            console.log('WebSocket is closed.');
+        }
+    });
+
+    const sendRequest = useCallback(() => {
+        const request = {
+            jsonrpc: "2.0",
+            id: 420,
+            method: "transactionSubscribe",
+            params: [
+                {
+                    accountInclude: accountsIncluded,
+                    accountRequire: accountsRequired
+                },
+                {
+                    commitment: commitmentState,
+                    encoding: encoding,
+                    transactionDetails: details,
+                    showRewards: true,
+                    maxSupportedTransactionVersion: 1
+                }
+            ]
+        };
+
+        if (!ws.current) {
+            // Open WebSocket
+            ws.current = new WebSocket('wss://atlas-mainnet.helius-rpc.com?api-key=23aabe59-1cbe-4b31-91da-0ae23a590bdc');
+            ws.current.onopen = () => {
+                console.log('WebSocket is open');
+                ws.current.send(JSON.stringify(request));
+                setIsConnected(true);
+            };
+        } else {
+            ws.current.send(JSON.stringify(request));
+            setIsConnected(true);
+        }
+        ws.current.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            setNotifications((prevNotifications) => [...prevNotifications, message]);
+        };
+    }, [accountsIncluded, accountsRequired, commitmentState, details, encoding]);
+
+    useEffect(() => {
+        if (ws.current) {
+            ws.current.onclose = () => { setIsConnected(false); console.log('WebSocket is closed'); };
+        }
+    }, []);
+
+    // JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
+
+    return (
+
+        <>
             <div className="relative isolate px-6 pt-6 lg:px-8">
                 <div
                     className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -136,13 +179,11 @@ export default function Home() {
                             Go Faster With<br /><span className="bg-gradient-to-r from-[#e3572e] via-orange-300 to-[#e3572e] inline-block text-transparent bg-clip-text">Websockets</span>
                         </h1>
                         <p className="text-lg leading-8 text-gray-200 mt-8">
-                            Websockets keep a persistent connection open,<br />enabling real-time data exchange.
+                            Websockets keep a persistent connection open,<br />enabling real-time data exchange. Test the transactionSubscribe method on Mainnet below.
                         </p>
                     </div>
                 </div>
 
-
-                {/* FORM */}
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-12">
                     <div className="sm:col-span-4 sm:col-start-4">
                         <label htmlFor="street-address" className="block text-sm font-medium leading-6 text-white">
@@ -150,11 +191,9 @@ export default function Home() {
                         </label>
                         <div className="mt-2">
                             <input
-                                type="text"
-                                name="street-address"
-                                id="street-address"
-                                autoComplete="street-address"
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                                value={address}
+                                onChange={event => setAddress(event.target.value)}
+                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
                             />
                         </div>
                     </div>
@@ -185,9 +224,46 @@ export default function Home() {
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="mt-2">
-                            <button className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6">
-                                Add Address
+                            <button
+                                onClick={addAddress}
+                                disabled={address.length === 0}
+                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
+                            >
+                                <span>Add Address</span>
+                                <CursorArrowRaysIcon className="w-5 ml-1 disabled:text-white/10 disabled:fill-white/10 enabled:text-white enabled:fill-white" />
                             </button>
+                        </div>
+                    </div>
+
+                    <div className="sm:col-span-6 sm:col-start-4">
+                        <div className="my-2">
+                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-52 overflow-y-scroll">
+                                {addresses.length === 0
+                                    ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-center gap-y-2 text-white/30 border border-dashed border-white/10 rounded-md w-64 h-5/6 mx-auto translate-y-4 bg-gray-500/5">
+                                            <CubeTransparentIcon className="w-8" />
+                                            Enter an address<br /> to get started
+                                        </div>
+                                    )
+                                    : (
+                                        addresses.map(item => (
+                                            <div className="text-center shadow-sm border-0 ring-1 ring-inset ring-white/10 mx-4 my-2 h-10 rounded-md px-2 flex items-center justify-between text-white/50">
+                                                <span>
+                                                    {item.address.slice(0, 6)}...{item.address.slice(-6)}
+                                                </span>
+                                                <span>
+                                                    {item.isRequired ? "Required" : "Not Required"}
+                                                </span>
+                                                <button
+                                                    onClick={() => removeAddress(item.address)}
+                                                >
+                                                    <XCircleIcon className="w-5 hover:text-red-300/50 transition-colors duration-200 ease-in-out" />
+                                                </button>
+                                            </div>
+                                        ))
+                                    )
+                                }
+                            </div>
                         </div>
                     </div>
 
@@ -200,7 +276,7 @@ export default function Home() {
                                 id="country"
                                 name="country"
                                 autoComplete="country-name"
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 px-1"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
                                 <option>Confirmed</option>
                                 <option>Finalized</option>
@@ -218,7 +294,7 @@ export default function Home() {
                                 id="country"
                                 name="country"
                                 autoComplete="country-name"
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 px-1"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
                                 <option>Full</option>
                                 <option>Signatures</option>
@@ -237,7 +313,7 @@ export default function Home() {
                                 id="country"
                                 name="country"
                                 autoComplete="country-name"
-                                className="block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 px-1"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
                                 <option>base58</option>
                                 <option>base64</option>
@@ -249,44 +325,66 @@ export default function Home() {
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="mt-2">
-                            <button className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6">
-                                Open Websocket
+                            <button
+                                disabled={addresses.length === 0 ? true : false}
+                                onClick={isConnected ? cloeWebSocket : sendRequest}
+                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
+                            >
+                                <span>{isConnected ? "Close Websocket" : "Open Websocket"}</span>
+                                <CursorArrowRaysIcon className="w-5 ml-1 disabled:text-white/10 disabled:fill-white/10 enabled:text-white enabled:fill-white" />
                             </button>
                         </div>
                     </div>
+
+                    <div className="sm:col-span-6 sm:col-start-4">
+                        <div className="my-2">
+                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-96 overflow-y-scroll">
+                                <div className="grid grid-cols-4 shadow-sm border-0 ring-1 ring-inset ring-white/10 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center bg-white/5 text-white">
+                                    <span>Transaction</span>
+                                    <span>Method</span>
+                                    <span>Compute Units</span>
+                                    <span>Fee</span>
+                                </div>
+                                <div className="h-full">
+                                    {notifications.length === 0
+                                        ? (
+                                            <div className="flex flex-col items-center justify-center text-center gap-y-2 text-white/30 border border-dashed border-white/10 rounded-md w-64 h-3/6 mx-auto translate-y-16 bg-gray-500/5">
+                                                <ChatBubbleOvalLeftEllipsisIcon className="w-8 rounded-full" />
+                                                Websocket feed will<br /> display here
+                                            </div>
+                                        )
+                                        : (
+                                            notifications.reverse().map((notification, index) => (
+                                                notification.params &&
+                                                <a
+                                                    href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                    target="_blank"
+                                                    rel="noreferrer noopener"
+                                                >
+                                                    <div key={index} className="grid grid-cols-4 shadow-sm border-0 ring-1 ring-inset ring-white/10 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white">
+                                                        <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}.</span>
+                                                        <span>{notification.method}</span>
+                                                        <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
+                                                        <span>{notification.params.result.transaction.meta.fee / 1000000000} SOL</span>
+                                                    </div>
+                                                </a>
+                                            ))
+                                        )
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* <div className="w-full lg:w-1/2 h-full flex flex-col gap-8">
+                        {[...notifications].reverse().map((notification, index) => {
+                            return (
+                                <TransactionNotificationCard key={index} data={notification} />
+
+                            );
+                        })}
+                    </div> */}
                 </div>
-
-
-                {/* <div className="flex items-center justify-center gap-x-6">
-          <form
-            // onSubmit={handleSubmit}
-            className="relative isolate flex h-11 w-[500px] items-center pr-1.5 md:w-[450px]"
-          >
-            <label htmlFor={id} className="sr-only">
-              Account Address
-            </label>
-            <input
-              required
-              type="walletAddress"
-              autoComplete="walletAddress"
-              name="walletAddress"
-              id={id}
-              placeholder="Solana Wallet Address"
-              className="peer w-0 flex-auto bg-transparent px-4 py-2.5 text-base text-white placeholder:text-gray-400 focus:outline-none sm:text-[0.8125rem]/6"
-            // value={inputValue}
-            // onChange={handleInputChange}
-            />
-
-            <button
-              className="border border-white/20 bg-white/5 hover:border-white/30 hover:bg-white/10 flex-none items-center justify-center rounded-md py-0.5 px-1.5 text-[0.8125rem]/6 font-semibold text-white font-light transition-all duration-200 ease-in-out disabled:cursor-not-allowed"
-            >
-              Add Address
-            </button>
-
-            <div className="absolute inset-0 -z-10 rounded-lg ring-offset-0 transition duration-200 ease-in-out peer-focus:ring-1 peer-focus:ring-primary" />
-            <div className="bg-white/2.5 absolute inset-0 -z-10 rounded-lg ring-1 ring-white/50" />
-          </form>
-        </div> */}
 
                 <div
                     className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
@@ -303,134 +401,132 @@ export default function Home() {
             </div>
 
 
-
-
-    {/* <main className="flex min-h-screen flex-col items-center justify-start p-24 bg-black gap-4">
-      <div className="w-full lg:w-1/2 flex flex-col gap-8">
-        <p className="text-4xl font-black text-orange-500">Transaction Subscribe</p>
-        <p className="text-xl text-bold text-orange-500">Stream transactions from the following accounts in real-time.</p>
-        <div className="w-full flex flex-col items-end space-y-4">
-          <input
-            className="w-full p-2 rounded text-black"
-            placeholder="Enter address..."
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-          <div className="flex flex-row items-center space-x-2">
-            <label className="text-orange-500">Required:</label>
-            <div className="flex items-center space-x-1">
-              <input
-                type="radio"
-                name="required"
-                checked={isRequired === true}
-                onChange={() => setIsRequired(true)}
-                className="text-orange-500"
-              />
-              <label htmlFor="yes" className="text-orange-500 cursor-pointer">Yes</label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <input
-                type="radio"
-                name="required"
-                checked={isRequired === false}
-                onChange={() => setIsRequired(false)}
-                className="text-orange-500"
-              />
-              <label htmlFor="no" className="text-orange-500 cursor-pointer">No</label>
-            </div>
-            <button
-              className="w-24 bg-orange-500 text-white p-2 rounded shadow hover:bg-orange-600 transition-colors"
-              onClick={addAddress}
-            >
-              Add
-            </button>
-          </div>
-        </div>
-        <div className="w-full flex flex-row justify-between">
-            <div className="w-1/2 border-orange-500 border-b-2 py-2">
-              <p className="text-orange-500 border-orange-500 border-b py-2 font-bold">Accounts Required</p>
-              <ul className="list-disc pl-5 text-xs py-1">
-                {accountsRequired.map((acc, index) => (
-                  <li key={index} className="text-orange-500">{acc}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="w-1/2 border-orange-500 border-b-2 py-2">
-              <p className="text-orange-500 border-orange-500 border-b py-2 font-bold">Accounts Included</p>
-              <ul className="list-disc pl-5 text-xs py-1">
-                {accountsIncluded.map((acc, index) => (
-                  <li key={index} className="text-orange-500">{acc}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-      </div>
-      <div className="flex flex-row gap-4">
-      <div className="flex justify-start items-center space-x-4">
-        <label htmlFor="commitment" className="text-orange-500">Commitment:</label>
-        <select
-          id="commitment"
-          value={commitmentState}
-          onChange={(e) => setCommitmentState(e.target.value)}
-          className="bg-black text-white border border-orange-500 rounded p-2 shadow outline-none hover:border-orange-600 focus:border-orange-600 transition-colors"
-        >
-          <option value="confirmed" className="text-white">Confirmed</option>
-          <option value="finalized" className="text-white">Finalized</option>
-          <option value="processed" className="text-white">Processed</option>
-        </select>
-      </div>
-      <div className="flex justify-start items-center space-x-4">
-        <label htmlFor="commitment" className="text-orange-500">Details:</label>
-        <select
-          id="commitment"
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-          className="bg-black text-white border border-orange-500 rounded p-2 shadow outline-none hover:border-orange-600 focus:border-orange-600 transition-colors"
-        >
-          <option value="full" className="text-white">Full</option>
-          <option value="signatures" className="text-white">Signatures</option>
-          <option value="accounts" className="text-white">Accounts</option>
-          <option value="none" className="text-white">None</option>
-        </select>
-      </div>
-      <div className="flex justify-start items-center space-x-4">
-        <label htmlFor="commitment" className="text-orange-500">Encoding:</label>
-        <select
-          id="commitment"
-          value={encoding}
-          onChange={(e) => setEncoding(e.target.value)}
-          className="bg-black text-white border border-orange-500 rounded p-2 shadow outline-none hover:border-orange-600 focus:border-orange-600 transition-colors"
-        >
-          <option value="base58" className="text-white">base58</option>
-          <option value="base64" className="text-white">base64</option>
-          <option value="base64+zstd" className="text-white">base64+zstd</option>
-          <option value="jsonParsed" className="text-white">jsonParsed</option>
-        </select>
-      </div>
-      </div>
-      {!isConnected ? (
-        <button
-          className="w-48 bg-orange-500 text-white p-2 rounded shadow hover:bg-orange-600 transition-colors"
-          onClick={sendRequest}
-        >
-          Open WebSocket
-        </button>
-      ) : (
-        <button
-          className="w-48 bg-red-500 text-white p-2 rounded shadow hover:bg-red-600 transition-colors"
-         onClick={cloeWebSocket}>
-          Close WebSocket
-        </button>
-      )}
-      <div className="w-full lg:w-1/2 h-full flex flex-col gap-8">
-      {[...notifications].reverse().map((notification, index) => {
-        return (
-          <TransactionNotificationCard key={index} data={notification} />
-        );
-      })}
-      </div>
-    </main> */}
+            {/* <main className="flex min-h-screen flex-col items-center justify-start p-24 bg-black gap-4">
+                <div className="w-full lg:w-1/2 flex flex-col gap-8">
+                    <p className="text-4xl font-black text-orange-500">Transaction Subscribe</p>
+                    <p className="text-xl text-bold text-orange-500">Stream transactions from the following accounts in real-time.</p>
+                    <div className="w-full flex flex-col items-end space-y-4">
+                        <input
+                            className="w-full p-2 rounded text-black"
+                            placeholder="Enter address..."
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                        />
+                        <div className="flex flex-row items-center space-x-2">
+                            <label className="text-orange-500">Required:</label>
+                            <div className="flex items-center space-x-1">
+                                <input
+                                    type="radio"
+                                    name="required"
+                                    checked={isRequired === true}
+                                    onChange={() => setIsRequired(true)}
+                                    className="text-orange-500"
+                                />
+                                <label htmlFor="yes" className="text-orange-500 cursor-pointer">Yes</label>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                                <input
+                                    type="radio"
+                                    name="required"
+                                    checked={isRequired === false}
+                                    onChange={() => setIsRequired(false)}
+                                    className="text-orange-500"
+                                />
+                                <label htmlFor="no" className="text-orange-500 cursor-pointer">No</label>
+                            </div>
+                            <button
+                                className="w-24 bg-orange-500 text-white p-2 rounded shadow hover:bg-orange-600 transition-colors"
+                                onClick={addAddress}
+                            >
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                    <div className="w-full flex flex-row justify-between">
+                        <div className="w-1/2 border-orange-500 border-b-2 py-2">
+                            <p className="text-orange-500 border-orange-500 border-b py-2 font-bold">Accounts Required</p>
+                            <ul className="list-disc pl-5 text-xs py-1">
+                                {accountsRequired.map((acc, index) => (
+                                    <li key={index} className="text-orange-500">{acc}</li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="w-1/2 border-orange-500 border-b-2 py-2">
+                            <p className="text-orange-500 border-orange-500 border-b py-2 font-bold">Accounts Included</p>
+                            <ul className="list-disc pl-5 text-xs py-1">
+                                {accountsIncluded.map((acc, index) => (
+                                    <li key={index} className="text-orange-500">{acc}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex flex-row gap-4">
+                    <div className="flex justify-start items-center space-x-4">
+                        <label htmlFor="commitment" className="text-orange-500">Commitment:</label>
+                        <select
+                            id="commitment"
+                            value={commitmentState}
+                            onChange={(e) => setCommitmentState(e.target.value)}
+                            className="bg-black text-white border border-orange-500 rounded p-2 shadow outline-none hover:border-orange-600 focus:border-orange-600 transition-colors"
+                        >
+                            <option value="confirmed" className="text-white">Confirmed</option>
+                            <option value="finalized" className="text-white">Finalized</option>
+                            <option value="processed" className="text-white">Processed</option>
+                        </select>
+                    </div>
+                    <div className="flex justify-start items-center space-x-4">
+                        <label htmlFor="commitment" className="text-orange-500">Details:</label>
+                        <select
+                            id="commitment"
+                            value={details}
+                            onChange={(e) => setDetails(e.target.value)}
+                            className="bg-black text-white border border-orange-500 rounded p-2 shadow outline-none hover:border-orange-600 focus:border-orange-600 transition-colors"
+                        >
+                            <option value="full" className="text-white">Full</option>
+                            <option value="signatures" className="text-white">Signatures</option>
+                            <option value="accounts" className="text-white">Accounts</option>
+                            <option value="none" className="text-white">None</option>
+                        </select>
+                    </div>
+                    <div className="flex justify-start items-center space-x-4">
+                        <label htmlFor="commitment" className="text-orange-500">Encoding:</label>
+                        <select
+                            id="commitment"
+                            value={encoding}
+                            onChange={(e) => setEncoding(e.target.value)}
+                            className="bg-black text-white border border-orange-500 rounded p-2 shadow outline-none hover:border-orange-600 focus:border-orange-600 transition-colors"
+                        >
+                            <option value="base58" className="text-white">base58</option>
+                            <option value="base64" className="text-white">base64</option>
+                            <option value="base64+zstd" className="text-white">base64+zstd</option>
+                            <option value="jsonParsed" className="text-white">jsonParsed</option>
+                        </select>
+                    </div>
+                </div>
+                {!isConnected ? (
+                    <button
+                        className="w-48 bg-orange-500 text-white p-2 rounded shadow hover:bg-orange-600 transition-colors"
+                        onClick={sendRequest}
+                    >
+                        Open WebSocket
+                    </button>
+                ) : (
+                    <button
+                        className="w-48 bg-red-500 text-white p-2 rounded shadow hover:bg-red-600 transition-colors"
+                        onClick={cloeWebSocket}>
+                        Close WebSocket
+                    </button>
+                )}
+                <div className="w-full lg:w-1/2 h-full flex flex-col gap-8">
+                    {[...notifications].reverse().map((notification, index) => {
+                        return (
+                            <TransactionNotificationCard key={index} data={notification} />
+                        );
+                    })}
+                </div>
+            </main> */}
         </>
 
-  );
+    );
 }
