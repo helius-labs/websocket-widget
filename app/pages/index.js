@@ -138,10 +138,6 @@ export default function Home() {
         console.log(apiKey);  // This will log the updated value of apiKey whenever it changes
     }, [apiKey]);  // Dependency array, useEffect runs when apiKey changes
 
-    // JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
-
-    // 23aabe59-1cbe-4b31-91da-0ae23a590bdc
-
     return (
 
         <>
