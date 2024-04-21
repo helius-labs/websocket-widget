@@ -16,14 +16,11 @@ export default function Home() {
     const [address, setAddress] = useState('');
     const [isRequired, setIsRequired] = useState(false);
     const [addresses, setAddresses] = useState([])
-    const [accountsRequired, setAccountsRequired] = useState([]);
-    const [accountsIncluded, setAccountsIncluded] = useState([]);
     const [commitmentState, setCommitmentState] = useState('confirmed');
     const [details, setDetails] = useState('full');
     const [encoding, setEncoding] = useState('base58');
     const [apiKey, setApiKey] = useState("");
 
-    // Function to validate Solana address
     // Function to validate Solana address
     const validateAddress = (address) => {
         // Check if the address already exists in the array
@@ -46,7 +43,6 @@ export default function Home() {
             }
         }
     };
-
 
     // Handle adding addresses
     const addAddress = () => {
@@ -130,13 +126,9 @@ export default function Home() {
 
     useEffect(() => {
         if (ws.current) {
-            ws.current.onclose = () => { setIsConnected(false); console.log('WebSocket is closed'); };
+            ws.current.onclose = () => { setIsConnected(false); };
         }
     }, []);
-
-    useEffect(() => {
-        console.log(apiKey);  // This will log the updated value of apiKey whenever it changes
-    }, [apiKey]);  // Dependency array, useEffect runs when apiKey changes
 
     return (
 
@@ -283,57 +275,51 @@ export default function Home() {
                     </div>
 
                     <div className="sm:col-span-2 sm:col-start-4">
-                        <label htmlFor="city" className="block text-sm font-medium leading-6 text-white">
+                        <label className="block text-sm font-medium leading-6 text-white">
                             Commitment
                         </label>
                         <div className="mt-2">
                             <select
-                                id="country"
-                                name="country"
-                                autoComplete="country-name"
+                                onChange={(e) => setCommitmentState(e.target.value)}
                                 className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option>Confirmed</option>
-                                <option>Finalized</option>
-                                <option>Processed</option>
+                                <option value="confirmed" className="text-white">Confirmed</option>
+                                <option value="finalized" className="text-white">Finalized</option>
+                                <option value="processed" className="text-white">Processed</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label htmlFor="region" className="block text-sm font-medium leading-6 text-white">
+                        <label className="block text-sm font-medium leading-6 text-white">
                             Details
                         </label>
                         <div className="mt-2">
                             <select
-                                id="country"
-                                name="country"
-                                autoComplete="country-name"
+                                onChange={(e) => setDetails(e.target.value)}
                                 className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option>Full</option>
-                                <option>Signatures</option>
-                                <option>Accounts</option>
-                                <option>None</option>
+                                <option value="full" className="text-white">Full</option>
+                                <option value="signatures" className="text-white">Signatures</option>
+                                <option value="accounts" className="text-white">Accounts</option>
+                                <option value="none" className="text-white">None</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label htmlFor="postal-code" className="block text-sm font-medium leading-6 text-white">
+                        <label className="block text-sm font-medium leading-6 text-white">
                             Encoding
                         </label>
                         <div className="mt-2">
                             <select
-                                id="country"
-                                name="country"
-                                autoComplete="country-name"
+                                onChange={(e) => setEncoding(e.target.value)}
                                 className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option>base58</option>
-                                <option>base64</option>
-                                <option>base64 + zstd</option>
-                                <option>json</option>
+                                <option value="base58" className="text-white">base58</option>
+                                <option value="base64" className="text-white">base64</option>
+                                <option value="base64+zstd" className="text-white">base64+zstd</option>
+                                <option value="jsonParsed" className="text-white">jsonParsed</option>
                             </select>
                         </div>
                     </div>
@@ -358,7 +344,7 @@ export default function Home() {
                                     <span>Transaction</span>
                                     <span>Method</span>
                                     <span>Compute Units</span>
-                                    <span>Fee</span>
+                                    <span>Fee (SOL)</span>
                                 </div>
                                 <div className="h-full">
                                     {notifications.length === 0
@@ -380,7 +366,7 @@ export default function Home() {
                                                         <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}.</span>
                                                         <span>{notification.method}</span>
                                                         <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
-                                                        <span>{notification.params.result.transaction.meta.fee / 1000000000} SOL</span>
+                                                        <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
                                                     </div>
                                                 </a>
                                             ))
