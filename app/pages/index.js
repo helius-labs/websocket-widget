@@ -368,8 +368,8 @@ export default function Home() {
                                                     target="_blank"
                                                     rel="noreferrer noopener"
                                                 >
-                                                    <div key={index} className="grid grid-cols-4 shadow-sm border-0 ring-1 ring-inset ring-white/10 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white">
-                                                        <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}.</span>
+                                                    <div key={index} className="transitiona-colors duration-100 ease-in-out grid grid-cols-4 shadow-sm border-0 ring-1 ring-inset ring-white/10 hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white">
+                                                        <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
                                                         <span>{notification.method}</span>
                                                         <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
                                                         <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
