@@ -18,7 +18,7 @@ export default function Home() {
     const [details, setDetails] = useState("full");
     const [encoding, setEncoding] = useState("base58");
     const [apiKey, setApiKey] = useState("");
-    const [countdown, setCountdown] = useState(10);
+    const [countdown, setCountdown] = useState(30);
     const [showNotif, setShowNotif] = useState(false);
 
     // Function to validate Solana address
@@ -81,7 +81,7 @@ export default function Home() {
             ws.current.close();
             ws.current = null;
             setIsConnected(false);
-            setCountdown(10);
+            setCountdown(30);
             console.log('WebSocket is closed.');
         }
     }, []);
@@ -142,7 +142,7 @@ export default function Home() {
         if (ws.current) {
             ws.current.onclose = () => {
                 setIsConnected(false);
-                setCountdown(10); // Reset countdown on WebSocket close
+                setCountdown(30); // Reset countdown on WebSocket close
             };
         }
 
@@ -153,7 +153,7 @@ export default function Home() {
                         clearInterval(countdownInterval);
                         cloeWebSocket(); // Close WebSocket when countdown reaches zero
                         setShowNotif(true); // Notify the user of the timeout
-                        return 10; // Reset countdown
+                        return 30; // Reset countdown
                     }
                     return prevCountdown - 1;
                 });
@@ -164,6 +164,12 @@ export default function Home() {
             clearInterval(countdownInterval); // Clean up interval on component unmount
         };
     }, [isConnected]);
+    
+    /*
+        test variables (for development purposes only):
+        * api key: 23aabe59-1cbe-4b31-91da-0ae23a590bdc
+        * account address: JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
+    */
 
     return (
         <>
@@ -206,9 +212,9 @@ export default function Home() {
                                     leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                                     leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                                 >
-                                    <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white/50 backdrop-blur-sm px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
+                                    <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white/70 backdrop-blur-sm px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
                                         <div>
-                                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/50">
+                                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
                                                 <ClockIcon className="h-6 w-6 text-black" aria-hidden="true" />
                                             </div>
                                             <div className="mt-3 text-center sm:mt-5">
