@@ -14,10 +14,10 @@ export default function Home() {
     const [address, setAddress] = useState('');
     const [isRequired, setIsRequired] = useState(false);
     const [addresses, setAddresses] = useState([])
-    const [commitmentState, setCommitmentState] = useState("confirmed");
-    const [details, setDetails] = useState("full");
-    const [encoding, setEncoding] = useState("base58");
-    const [apiKey, setApiKey] = useState("");
+    const [commitmentState, setCommitmentState] = useState("confirmed")
+    const [details, setDetails] = useState("full")
+    const [encoding, setEncoding] = useState("base58")
+    const [apiKey, setApiKey] = useState("")
 
     // Function to validate Solana address
     const validateAddress = (address) => {
