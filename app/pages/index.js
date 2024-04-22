@@ -164,12 +164,6 @@ export default function Home() {
             clearInterval(countdownInterval); // Clean up interval on component unmount
         };
     }, [isConnected]);
-    
-    /*
-        test variables (for development purposes only):
-        * api key: 23aabe59-1cbe-4b31-91da-0ae23a590bdc
-        * account address: JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4
-    */
 
     return (
         <>
