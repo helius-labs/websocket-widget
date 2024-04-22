@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, Fragment } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
-import { Switch } from "@headlessui/react";
+import { ClockIcon, ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import { Switch, Dialog, Transition } from "@headlessui/react";
 
 const classNames = (...classes) => {
     return classes.filter(Boolean).join(' ');
@@ -18,7 +18,8 @@ export default function Home() {
     const [details, setDetails] = useState("full");
     const [encoding, setEncoding] = useState("base58");
     const [apiKey, setApiKey] = useState("");
-    const [countdown, setCountdown] = useState(60);
+    const [countdown, setCountdown] = useState(10);
+    const [showNotif, setShowNotif] = useState(false);
 
     // Function to validate Solana address
     const validateAddress = (address) => {
@@ -80,11 +81,15 @@ export default function Home() {
             ws.current.close();
             ws.current = null;
             setIsConnected(false);
+            setCountdown(10);
             console.log('WebSocket is closed.');
         }
-    });
+    }, []);
 
     const sendRequest = useCallback(() => {
+        console.log("REQ SENT")
+
+        // derive which accounts are required and not
         const { accountsRequired, accountsIncluded } = addresses.reduce((acc, item) => {
             if (item.required) {
                 acc.accountsRequired.push(item.address);
@@ -118,7 +123,6 @@ export default function Home() {
             const wsUrl = `wss://atlas-mainnet.helius-rpc.com?api-key=${apiKey}`;
             ws.current = new WebSocket(wsUrl);
             ws.current.onopen = () => {
-                console.log('WebSocket is open');
                 ws.current.send(JSON.stringify(request));
                 setIsConnected(true);
             };
@@ -133,10 +137,33 @@ export default function Home() {
     }, [apiKey, addresses, commitmentState, details, encoding]);
 
     useEffect(() => {
+        let countdownInterval;
+
         if (ws.current) {
-            ws.current.onclose = () => { setIsConnected(false); };
+            ws.current.onclose = () => {
+                setIsConnected(false);
+                setCountdown(10); // Reset countdown on WebSocket close
+            };
         }
-    }, []);
+
+        if (isConnected && ws.current) {
+            countdownInterval = setInterval(() => {
+                setCountdown((prevCountdown) => {
+                    if (prevCountdown === 1) {
+                        clearInterval(countdownInterval);
+                        cloeWebSocket(); // Close WebSocket when countdown reaches zero
+                        setShowNotif(true); // Notify the user of the timeout
+                        return 10; // Reset countdown
+                    }
+                    return prevCountdown - 1;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            clearInterval(countdownInterval); // Clean up interval on component unmount
+        };
+    }, [isConnected]);
 
     return (
         <>
@@ -153,6 +180,63 @@ export default function Home() {
                         }}
                     />
                 </div>
+
+                <Transition.Root show={showNotif} as={Fragment}>
+                    <Dialog as="div" className="relative z-10" onClose={setShowNotif}>
+                        <Transition.Child
+                            as={Fragment}
+                            enter="ease-out duration-300"
+                            enterFrom="opacity-0"
+                            enterTo="opacity-100"
+                            leave="ease-in duration-200"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                        >
+                            <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm transition-opacity" />
+                        </Transition.Child>
+
+                        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+                            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                <Transition.Child
+                                    as={Fragment}
+                                    enter="ease-out duration-300"
+                                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                    enterTo="opacity-100 translate-y-0 sm:scale-100"
+                                    leave="ease-in duration-200"
+                                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                >
+                                    <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white/50 backdrop-blur-sm px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
+                                        <div>
+                                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/50">
+                                                <ClockIcon className="h-6 w-6 text-black" aria-hidden="true" />
+                                            </div>
+                                            <div className="mt-3 text-center sm:mt-5">
+                                                <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-black">
+                                                    Websocket Timeout
+                                                </Dialog.Title>
+                                                <div className="mt-2">
+                                                    <p className="text-sm text-black">
+                                                        Your websocket connection has timed out. This is done to preserve your credits.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-5 sm:mt-6">
+                                            <button
+                                                type="button"
+                                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-black/80 enabled:hover:ring-orange-200/20 enabled:hover:bg-black/50 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-white/10 sm:text-sm sm:leading-6"
+                                                onClick={() => setShowNotif(false)}
+                                            >
+                                                Return
+                                            </button>
+                                        </div>
+                                    </Dialog.Panel>
+                                </Transition.Child>
+                            </div>
+                        </div>
+                    </Dialog>
+                </Transition.Root>
 
                 <div className="mx-auto max-w-2xl pt-32 sm:pt-48 pb-10">
                     <div className="hidden sm:flex sm:justify-center">
@@ -394,9 +478,9 @@ export default function Home() {
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="my-2">
-                            <p className="text-center text-xs text-white/50 font-light">
-                                Helius websockets consume 1 credit per event push. This app is for testing and demo purposes. 
-                                In order to preseve your credits, the websocket stream will automatically close after 60 seconds.
+                            <p className="text-white/50 text-xs font-light text-center">
+                                Helius websockets consume 1 credit per event push. This app is for testing and demo purposes.
+                                In order to preseve your credits, the websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
                             </p>
                         </div>
                     </div>
