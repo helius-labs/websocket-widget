@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { Switch } from "@headlessui/react";
 
 const classNames = (...classes) => {
@@ -14,10 +14,11 @@ export default function Home() {
     const [address, setAddress] = useState('');
     const [isRequired, setIsRequired] = useState(false);
     const [addresses, setAddresses] = useState([])
-    const [commitmentState, setCommitmentState] = useState("confirmed")
-    const [details, setDetails] = useState("full")
-    const [encoding, setEncoding] = useState("base58")
-    const [apiKey, setApiKey] = useState("")
+    const [commitmentState, setCommitmentState] = useState("confirmed");
+    const [details, setDetails] = useState("full");
+    const [encoding, setEncoding] = useState("base58");
+    const [apiKey, setApiKey] = useState("");
+    const [countdown, setCountdown] = useState(60);
 
     // Function to validate Solana address
     const validateAddress = (address) => {
@@ -186,8 +187,16 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-12">
                     <div className="sm:col-span-6 sm:col-start-4">
-                        <label className="block text-sm font-medium leading-6 text-white">
-                            Helius API Key
+                        <label className="block text-sm font-medium leading-6 text-white cursor-pointer hover:text-white/70 duration-200 ease-in-out transition-smooth">
+                            <a
+                                className="flex items-center"
+                                href="https://dev.helius.xyz/dashboard/app"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Helius API Key
+                                <ArrowTopRightOnSquareIcon className="w-4 ml-1 enabled:text-white enabled:fill-white" />
+                            </a>
                         </label>
                         <div className="mt-2">
                             <input
@@ -243,7 +252,7 @@ export default function Home() {
                                 className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>Add Address</span>
-                                <CursorArrowRaysIcon className="w-5 ml-1 disabled:text-white/10 disabled:fill-white/10 enabled:text-white enabled:fill-white" />
+                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-white enabled:fill-white" />
                             </button>
                         </div>
                     </div>
@@ -338,7 +347,7 @@ export default function Home() {
                                 className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>{isConnected ? "Close Websocket" : "Open Websocket"}</span>
-                                <CursorArrowRaysIcon className="w-5 ml-1 disabled:text-white/10 disabled:fill-white/10 enabled:text-white enabled:fill-white" />
+                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-white enabled:fill-white" />
                             </button>
                         </div>
                     </div>
@@ -380,6 +389,15 @@ export default function Home() {
                                     }
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="sm:col-span-6 sm:col-start-4">
+                        <div className="my-2">
+                            <p className="text-center text-xs text-white/50 font-light">
+                                Helius websockets consume 1 credit per event push. This app is for testing and demo purposes. 
+                                In order to preseve your credits, the websocket stream will automatically close after 60 seconds.
+                            </p>
                         </div>
                     </div>
                 </div>
