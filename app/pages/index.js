@@ -70,9 +70,6 @@ export default function Home() {
                 newAddresses.splice(index, 1);
                 return newAddresses;
             });
-        } else {
-            // Optionally, handle the case where the address is not found
-            console.log("Address not found in the array.");
         }
     };
 
@@ -82,13 +79,10 @@ export default function Home() {
             ws.current = null;
             setIsConnected(false);
             setCountdown(30);
-            console.log('WebSocket is closed.');
         }
     }, []);
 
     const sendRequest = useCallback(() => {
-        console.log("REQ SENT")
-
         // derive which accounts are required and not
         const { accountsRequired, accountsIncluded } = addresses.reduce((acc, item) => {
             if (item.required) {
