@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, useRef, Fragment } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { ClockIcon, ArrowRightCircleIcon, CursorArrowRaysIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
-import { Switch, Dialog, Transition } from "@headlessui/react";
+import { ClockIcon, ArrowRightCircleIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import { CursorArrowRaysIcon } from "@heroicons/react/20/solid";
+import { Switch, Dialog, Transition, Popover } from "@headlessui/react";
 import Link from "next/link";
 
 const classNames = (...classes) => {
@@ -125,8 +126,10 @@ export default function Home() {
             ws.current.send(JSON.stringify(request));
             setIsConnected(true);
         }
+
         ws.current.onmessage = (event) => {
             const message = JSON.parse(event.data);
+            console.log("MESSAGE", message);
             setNotifications((prevNotifications) => [...prevNotifications, message]);
         };
     }, [apiKey, addresses, commitmentState, details, encoding]);
@@ -475,10 +478,9 @@ export default function Home() {
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="my-2">
-                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-96 overflow-y-scroll">
-                                <div className="grid grid-cols-4 shadow-sm border-0 ring-1 ring-inset ring-white/10 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center bg-white/5 text-white">
+                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-96 overflow-y-scroll overflow-x-hidden">
+                                <div className="grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-white/10 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center bg-white/5 text-white">
                                     <span>Transaction</span>
-                                    <span>Method</span>
                                     <span>Compute Units</span>
                                     <span>Fee (SOL)</span>
                                 </div>
@@ -486,25 +488,95 @@ export default function Home() {
                                     {notifications.length === 0
                                         ? (
                                             <div className="flex flex-col items-center justify-center text-center gap-y-2 text-white/30 border border-dashed border-white/10 rounded-md w-64 h-3/6 mx-auto translate-y-16 bg-gray-500/5">
-                                                <ChatBubbleOvalLeftEllipsisIcon className="w-8 rounded-full" />
+                                                <ChatBubbleOvalLeftEllipsisIcon className="w-8" />
                                                 Websocket feed will<br /> display here
                                             </div>
                                         )
                                         : (
                                             notifications.reverse().map((notification, index) => (
                                                 notification.params &&
-                                                <a
-                                                    href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
-                                                    target="_blank"
-                                                    rel="noreferrer noopener"
-                                                >
-                                                    <div key={index} className="transitiona-colors duration-100 ease-in-out grid grid-cols-4 shadow-sm border-0 ring-1 ring-inset ring-white/10 hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white">
-                                                        <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
-                                                        <span>{notification.method}</span>
-                                                        <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
-                                                        <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
-                                                    </div>
-                                                </a>
+                                                <Popover key={index} className="relative">
+                                                    <Popover.Button className="w-full">
+                                                        <div className="transitiona-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-white/10 hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white">
+                                                            <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
+                                                            <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
+                                                            <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
+                                                        </div>
+                                                    </Popover.Button>
+
+                                                    <Transition
+                                                        as={Fragment}
+                                                        enter="transition ease-out duration-200"
+                                                        enterFrom="opacity-0 translate-y-1"
+                                                        enterTo="opacity-100 translate-y-0"
+                                                        leave="transition ease-in duration-150"
+                                                        leaveFrom="opacity-100 translate-y-0"
+                                                        leaveTo="opacity-0 translate-y-1"
+                                                    >
+                                                        <Popover.Panel className="absolute left-1/2 z-10 mt-1 flex w-screen max-w-max -translate-x-1/2 px-4">
+                                                            <div className="w-screen max-w-md lg:max-w-xl flex-auto overflow-hidden rounded-lg bg-gray-400/90 backdrop-blur-sm text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
+                                                                <div className="grid grid-cols-1 gap-x-6 gap-y-1 p-4 lg:grid-cols-2">
+
+                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                        <div>
+                                                                            <p className="font-semibold text-gray-900">
+                                                                                Method
+                                                                                <span className="absolute inset-0" />
+                                                                            </p>
+                                                                            <p className="mt-1 text-gray-700">{notification.method}</p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                        <div>
+                                                                            <p className="font-semibold text-gray-900">
+                                                                                Transaction Version
+                                                                                <span className="absolute inset-0" />
+                                                                            </p>
+                                                                            <p className="mt-1 text-gray-700">{notification.params.result.transaction.version}</p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                        <div>
+                                                                            <p className="font-semibold text-gray-900">
+                                                                                Subscription
+                                                                                <span className="absolute inset-0" />
+                                                                            </p>
+                                                                            <p className="mt-1 text-gray-700">{notification.params.subscription}</p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                        <div>
+                                                                            <p className="font-semibold text-gray-900">
+                                                                                Encoding
+                                                                                <span className="absolute inset-0" />
+                                                                            </p>
+                                                                            <p className="mt-1 text-gray-700">{notification.params.result.transaction.transaction[1]}</p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                                <div className="px-8 py-6 bg-gray-500/50 hover:bg-gray-500/80 transition-color duration-200 ease-in-out">
+                                                                    <a
+                                                                        href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferer"
+                                                                    >
+                                                                        <div className="flex items-center gap-x-3">
+                                                                            <h3 className="text-sm font-semibold leading-6 text-gray-900">Transaction</h3>
+                                                                            <p className="rounded-full bg-orange-300/50 ring-1 ring-orange-400/50 px-2.5 py-1 text-xs font-semibold text-black">View</p>
+                                                                        </div>
+                                                                        <p className="mt-2 text-sm leading-6 text-gray-700">
+                                                                            {notification.params.result.signature.slice(0, 38)}...
+                                                                        </p>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </Popover.Panel>
+                                                    </Transition>
+                                                </Popover>
                                             ))
                                         )
                                     }
