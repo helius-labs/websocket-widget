@@ -233,7 +233,7 @@ export default function Home() {
                     </Dialog>
                 </Transition.Root>
 
-                <nav className="h-20 flex items-center justify-between px-8">
+                <nav className="flex items-center justify-between p-10">
                     <Link
                         href="https://www.helius.dev/"
                         className=""
@@ -517,7 +517,7 @@ export default function Home() {
                         <div className="my-2">
                             <p className="text-white/50 text-xs font-light text-center">
                                 Helius websockets consume 1 credit per event push. This app is for testing and demo purposes.
-                                In order to preseve your credits, the websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
+                                In order to preserve your credits, the websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
                             </p>
                         </div>
                     </div>
