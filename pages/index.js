@@ -21,7 +21,6 @@ export default function Home() {
     const [apiKey, setApiKey] = useState("");
     const [countdown, setCountdown] = useState(30);
     const [showNotif, setShowNotif] = useState(false);
-    const [theme, setTheme] = useState('dark');
 
     // Function to validate Solana address
     const validateAddress = (address) => {
@@ -133,19 +132,6 @@ export default function Home() {
             setNotifications((prevNotifications) => [...prevNotifications, message]);
         };
     }, [apiKey, addresses, commitmentState, details, encoding]);
-    
-    useEffect(() => {
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        setTheme(currentTheme);
-        document.documentElement.classList.toggle('dark', currentTheme === 'dark');
-    }, []);
-    
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-        document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    };
 
     useEffect(() => {
         let countdownInterval;
@@ -236,7 +222,7 @@ export default function Home() {
                                         <div className="mt-5 sm:mt-6">
                                             <button
                                                 type="button"
-                                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-black/80 enabled:hover:ring-orange-200/20 enabled:hover:bg-black/50 py-2 text-gray-800 dark:text-gray-200/10 enabled:text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  sm:text-sm sm:leading-6"
+                                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-black/80 enabled:hover:ring-orange-200/20 enabled:hover:bg-black/50 py-2 text-white /10 enabled:text-white  shadow-sm ring-1 ring-inset ring-black/10   sm:text-sm sm:leading-6"
                                                 onClick={() => setShowNotif(false)}
                                             >
                                                 Return
@@ -253,7 +239,6 @@ export default function Home() {
                     <a
                         href="https://www.helius.dev/"
                         className=""
-                        href="https://github.com/helius-labs/websocket-widget"
                         target="_blank"
                     >
                         <svg width="46" height="46" viewBox="0 0 494 490" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -274,23 +259,6 @@ export default function Home() {
                         </svg>
                     </a>
                     <div className="flex flex-row space-x-4">
-                        <button
-                            onClick={toggleTheme}
-                            className="flex justify-center items-center ring-1 ring-white/50 hover:ring-orange-300/50 rounded-full h-8 px-4 transition-color duration-200 ease-in-out hover:bg-white/10"
-                            aria-label="Toggle Dark Mode"
-                            >
-                            {theme === 'light' ? (
-                                <>
-                                <SunIcon className="h-5 w-5 text-gray-800 mr-2" />
-                                <span className="text-sm font-medium text-gray-800">LIGHT</span>
-                                </>
-                            ) : (
-                                <>
-                                <MoonIcon className="h-5 w-5 text-gray-200 mr-2" />
-                                <span className="text-sm font-medium text-gray-200">DARK</span>
-                                </>
-                            )}
-                        </button>
                         <a 
                         href="https://github.com/helius-labs/websocket-widget"
                         target="_blank"
@@ -322,7 +290,7 @@ export default function Home() {
                             rel="noopener noreferrer"
                             className="group flex justify-center"
                         >
-                            <div className="relative flex items-center rounded-full text-opacity-70 group-hover:text-opacity-100 border border-white border-opacity-20 bg-opacity-25 px-4 py-1 text-xs leading-6 text-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out hover:bg-black/10 group-hover:border-opacity-60 group-hover:bg-opacity-75 sm:px-3 sm:text-sm">
+                            <div className="relative flex items-center rounded-full text-opacity-70 group-hover:text-opacity-100 border border-white border-opacity-20 bg-opacity-25 px-4 py-1 text-xs leading-6 text-white  transition-all duration-200 ease-in-out hover:bg-black/10 group-hover:border-opacity-60 group-hover:bg-opacity-75 sm:px-3 sm:text-sm">
                                 Want to learn more?{" "}
 
                                 <span className="mx-2 h-4 border-l border-white/20" />
@@ -336,10 +304,10 @@ export default function Home() {
                         </a>
                     </div>
                     <div className="text-center mt-8">
-                        <h1 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-200 sm:text-6xl">
+                        <h1 className="text-4xl font-bold tracking-tight text-white  sm:text-6xl">
                             Go Faster With<br /><span className="bg-gradient-to-r from-[#e3572e] via-orange-300 to-[#e3572e] inline-block text-transparent bg-clip-text">Websockets</span>
                         </h1>
-                        <p className="text-lg leading-8 text-gray-800 dark:text-gray-200 mt-8">
+                        <p className="text-lg leading-8 text-white  mt-8">
                             Websockets keep a persistent connection open,<br />enabling real-time data exchange. Test the transactionSubscribe method on Mainnet below.
                         </p>
                     </div>
@@ -347,7 +315,7 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-12">
                     <div className="sm:col-span-6 sm:col-start-4">
-                        <label className="w-fit block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200 cursor-pointer duration-200 ease-in-out transition-smooth">
+                        <label className="w-fit block text-sm font-medium leading-6 text-white  cursor-pointer duration-200 ease-in-out transition-smooth">
                             <a
                                 className="flex items-center w-fit"
                                 href="https://dev.helius.xyz/dashboard/app"
@@ -355,27 +323,27 @@ export default function Home() {
                                 rel="noopener noreferrer"
                             >
                                 Helius API Key
-                                <ArrowTopRightOnSquareIcon className="w-4 ml-1 enabled:text-gray-800 dark:text-gray-200 enabled:fill-white" />
+                                <ArrowTopRightOnSquareIcon className="w-4 ml-1 enabled:text-white  enabled:fill-white" />
                             </a>
                         </label>
                         <div className="mt-2">
                             <input
                                 value={apiKey}
                                 onChange={event => setApiKey(event.target.value)}
-                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
                             />
                         </div>
                     </div>
 
                     <div className="sm:col-span-4 sm:col-start-4">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Solana Address
                         </label>
                         <div className="mt-2">
                             <input
                                 value={address}
                                 onChange={event => setAddress(event.target.value)}
-                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
                             />
                         </div>
                     </div>
@@ -386,7 +354,7 @@ export default function Home() {
                                 checked={isRequired}
                                 onChange={setIsRequired}
                                 className={classNames(
-                                    isRequired ? 'bg-orange-300/40' : 'bg-black/10 dark:bg-white/10',
+                                    isRequired ? 'bg-orange-300/40' : 'bg-black/10 ',
                                     "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
                                 )}
                             >
@@ -399,7 +367,7 @@ export default function Home() {
                                 />
                             </Switch>
                             <Switch.Label as="span" className="ml-3 text-sm">
-                                <span className="font-medium text-gray-800 dark:text-gray-200">Is Required</span>{' '}
+                                <span className="font-medium text-white ">Is Required</span>{' '}
                             </Switch.Label>
                         </Switch.Group>
                     </div>
@@ -409,27 +377,27 @@ export default function Home() {
                             <button
                                 onClick={addAddress}
                                 disabled={address.length === 0 || apiKey.length === 0}
-                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-gray-800 dark:text-gray-200/10 enabled:text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
+                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>Add Address</span>
-                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-gray-800 dark:text-gray-200 enabled:fill-white" />
+                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-white  enabled:fill-white" />
                             </button>
                         </div>
                     </div>
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="my-2">
-                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-52 overflow-y-scroll">
+                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-52 overflow-y-scroll">
                                 {addresses.length === 0
                                     ? (
-                                        <div className="flex flex-col items-center justify-center text-center gap-y-2 text-gray-800 dark:text-gray-200/30 border border-dashed border-white/10 rounded-md w-64 h-5/6 mx-auto translate-y-4 bg-gray-500/5">
+                                        <div className="flex flex-col items-center justify-center text-center gap-y-2 text-white /30 border border-dashed border-white/10 rounded-md w-64 h-5/6 mx-auto translate-y-4 bg-gray-500/5">
                                             <CubeTransparentIcon className="w-8" />
                                             Enter an address<br /> to get started
                                         </div>
                                     )
                                     : (
                                         addresses.map(item => (
-                                            <div className="text-center shadow-sm border-0 ring-1 ring-inset ring-black/10 dark:ring-white/10  mx-4 my-2 h-10 rounded-md px-2 flex items-center justify-between text-gray-800 dark:text-gray-200/50">
+                                            <div className="text-center shadow-sm border-0 ring-1 ring-inset ring-black/10   mx-4 my-2 h-10 rounded-md px-2 flex items-center justify-between text-white /50">
                                                 <span>
                                                     {item.address.slice(0, 6)}...{item.address.slice(-6)}
                                                 </span>
@@ -450,51 +418,51 @@ export default function Home() {
                     </div>
 
                     <div className="sm:col-span-2 sm:col-start-4">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Commitment
                         </label>
                         <div className="mt-2">
                             <select
                                 onChange={(e) => setCommitmentState(e.target.value)}
-                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="confirmed" className="text-gray-800">Confirmed</option>
-                                <option value="finalized" className="text-gray-800">Finalized</option>
-                                <option value="processed" className="text-gray-800">Processed</option>
+                                <option value="confirmed" className="text-white/50">Confirmed</option>
+                                <option value="finalized" className="text-white/50">Finalized</option>
+                                <option value="processed" className="text-white/50">Processed</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Details
                         </label>
                         <div className="mt-2">
                             <select
                                 onChange={(e) => setDetails(e.target.value)}
-                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="full" className="text-gray-800">Full</option>
-                                <option value="signatures" className="text-gray-800">Signatures</option>
-                                <option value="accounts" className="text-gray-800">Accounts</option>
-                                <option value="none" className="text-gray-800">None</option>
+                                <option value="full" className="text-white">Full</option>
+                                <option value="signatures" className="text-white">Signatures</option>
+                                <option value="accounts" className="text-white">Accounts</option>
+                                <option value="none" className="text-white">None</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Encoding
                         </label>
                         <div className="mt-2">
                             <select
                                 onChange={(e) => setEncoding(e.target.value)}
-                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="base58" className="text-gray-800">base58</option>
-                                <option value="base64" className="text-gray-800">base64</option>
-                                <option value="base64+zstd" className="text-gray-800">base64+zstd</option>
-                                <option value="jsonParsed" className="text-gray-800">jsonParsed</option>
+                                <option value="base58" className="text-white">base58</option>
+                                <option value="base64" className="text-white">base64</option>
+                                <option value="base64+zstd" className="text-white">base64+zstd</option>
+                                <option value="jsonParsed" className="text-white">jsonParsed</option>
                             </select>
                         </div>
                     </div>
@@ -504,18 +472,18 @@ export default function Home() {
                             <button
                                 disabled={addresses.length === 0 ? true : false}
                                 onClick={isConnected ? cloeWebSocket : sendRequest}
-                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-gray-800 dark:text-gray-200/10 enabled:text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
+                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>{isConnected ? "Close Websocket" : "Open Websocket"}</span>
-                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-gray-800 dark:text-gray-200 enabled:fill-white" />
+                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-white  enabled:fill-white" />
                             </button>
                         </div>
                     </div>
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="my-2">
-                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-96 overflow-y-scroll overflow-x-hidden">
-                                <div className="grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10 dark:ring-white/10  mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center bg-white/5 text-gray-800 dark:text-gray-200">
+                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-96 overflow-y-scroll overflow-x-hidden">
+                                <div className="grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center bg-white/5 text-white ">
                                     <span>Transaction</span>
                                     <span>Compute Units</span>
                                     <span>Fee (SOL)</span>
@@ -523,7 +491,7 @@ export default function Home() {
                                 <div className="h-full">
                                     {notifications.length === 0
                                         ? (
-                                            <div className="flex flex-col items-center justify-center text-center gap-y-2 text-gray-800 dark:text-gray-200/30 border border-dashed border-white/10 rounded-md w-64 h-3/6 mx-auto translate-y-16 bg-gray-500/5">
+                                            <div className="flex flex-col items-center justify-center text-center gap-y-2 text-white /30 border border-dashed border-white/10 rounded-md w-64 h-3/6 mx-auto translate-y-16 bg-gray-500/5">
                                                 <ChatBubbleOvalLeftEllipsisIcon className="w-8" />
                                                 Websocket feed will<br /> display here
                                             </div>
@@ -533,7 +501,7 @@ export default function Home() {
                                                 notification.params &&
                                                 <Popover key={index} className="relative">
                                                     <Popover.Button className="w-full">
-                                                        <div className="transitiona-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10 dark:ring-white/10  hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-gray-800 dark:text-gray-200">
+                                                        <div className="transitiona-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white ">
                                                             <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
                                                             <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
                                                             <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
@@ -623,7 +591,7 @@ export default function Home() {
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="my-2">
-                            <p className="text-gray-800 dark:text-gray-200/50 text-xs font-light text-center">
+                            <p className="text-white /50 text-xs font-light text-center">
                                 Helius websockets consume 1 credit per event push. This app is for testing and demo purposes.
                                 In order to preserve your credits, the websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
                             </p>
