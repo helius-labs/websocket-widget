@@ -79,7 +79,7 @@ export default function Home() {
         }
     };
 
-    const cloeWebSocket = useCallback(() => {
+    const cloewebsocket = useCallback(() => {
         if (ws.current) {
             ws.current.close();
             ws.current = null;
@@ -121,8 +121,8 @@ export default function Home() {
         };
 
         if (!ws.current) {
-            // Open WebSocket
-            ws.current = new WebSocket(wsUrl);
+            // Open websocket
+            ws.current = new websocket(wsUrl);
             ws.current.onopen = () => {
                 ws.current.send(JSON.stringify(request));
                 setIsConnected(true);
@@ -145,7 +145,7 @@ export default function Home() {
         if (ws.current) {
             ws.current.onclose = () => {
                 setIsConnected(false);
-                setCountdown(30); // Reset countdown on WebSocket close
+                setCountdown(30); // Reset countdown on websocket close
             };
         }
 
@@ -154,7 +154,7 @@ export default function Home() {
                 setCountdown((prevCountdown) => {
                     if (prevCountdown === 1) {
                         clearInterval(countdownInterval);
-                        cloeWebSocket(); // Close WebSocket when countdown reaches zero
+                        cloewebsocket(); // Close websocket when countdown reaches zero
                         setShowNotif(true); // Notify the user of the timeout
                         return 30; // Reset countdown
                     }
@@ -171,23 +171,23 @@ export default function Home() {
     return (
         <>
             <Head>
-                <title>WebSocket Widget | Helius Labs</title>
-                <meta name="description" content="Try the Geyser-enhanced WebSocket Widget by Helius Labs for streaming transactions in real-time." />
-                <meta name="keywords" content="WebSocket, Helius Labs, real-time data, API, widget, Solana transactions, push notifications" />
+                <title>Websocket Widget | Helius Labs</title>
+                <meta name="description" content="Try the Geyser-enhanced websocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta name="keywords" content="websocket, Helius Labs, real-time data, API, widget, Solana transactions, push notifications" />
                 <meta name="author" content="Helius Labs" />
 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content="https://your-domain.com/" />
-                <meta property="og:title" content="WebSocket Widget | Helius Labs" />
-                <meta property="og:description" content="Try the Geyser-enhanced WebSocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta property="og:title" content="Websocket Widget | Helius Labs" />
+                <meta property="og:description" content="Try the Geyser-enhanced websocket Widget by Helius Labs for streaming transactions in real-time." />
                 <meta property="og:image" content="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Fsocialpreview%2FVHFOgiKq7CnWnFYnekvU%2FHelius%20mark%20orange%20copy%2012.png?alt=media&amp;token=c68f65f2-0be5-4b2b-af5a-b8dcff08eed7" />
 
                 {/* Twitter */}
                 <meta property="twitter:card" content="summary_large_image" />
                 <meta property="twitter:url" content="https://twitter.com/heliuslabs" />
-                <meta property="twitter:title" content="WebSocket Widget | Helius Labs" />
-                <meta property="twitter:description" content="Try the Geyser-enhanced WebSocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta property="twitter:title" content="Websocket Widget | Helius Labs" />
+                <meta property="twitter:description" content="Try the Geyser-enhanced websocket Widget by Helius Labs for streaming transactions in real-time." />
                 <meta property="twitter:image" content="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Fsocialpreview%2FVHFOgiKq7CnWnFYnekvU%2FHelius%20mark%20orange%20copy%2012.png?alt=media&amp;token=c68f65f2-0be5-4b2b-af5a-b8dcff08eed7" />
 
                 {/* Additional tags for finer control if needed */}
@@ -564,7 +564,7 @@ export default function Home() {
                         <div className="mt-2">
                             <button
                                 disabled={addresses.length === 0 ? true : false}
-                                onClick={isConnected ? cloeWebSocket : sendRequest}
+                                onClick={isConnected ? cloewebsocket : sendRequest}
                                 className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>{isConnected ? "Close Websocket" : "Open Websocket"}</span>
