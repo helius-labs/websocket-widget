@@ -37,7 +37,7 @@ export default function Home() {
             try {
                 const pubkey = new PublicKey(address);
                 // Check if the encoded address has the typical length of 43 characters
-                if (pubkey.toBase58().length === 43) {
+                if (PublicKey.isOnCurve(pubkey.toBytes())) {
                     return true;
                 } else {
                     alert('Invalid Solana address');
