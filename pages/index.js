@@ -79,7 +79,7 @@ export default function Home() {
         }
     };
 
-    const cloewebsocket = useCallback(() => {
+    const closeWebsocket = useCallback(() => {
         if (ws.current) {
             ws.current.close();
             ws.current = null;
@@ -122,7 +122,7 @@ export default function Home() {
 
         if (!ws.current) {
             // Open websocket
-            ws.current = new websocket(wsUrl);
+            ws.current = new Websocket(wsUrl);
             ws.current.onopen = () => {
                 ws.current.send(JSON.stringify(request));
                 setIsConnected(true);
@@ -154,7 +154,7 @@ export default function Home() {
                 setCountdown((prevCountdown) => {
                     if (prevCountdown === 1) {
                         clearInterval(countdownInterval);
-                        cloewebsocket(); // Close websocket when countdown reaches zero
+                        closeWebsocket(); // Close websocket when countdown reaches zero
                         setShowNotif(true); // Notify the user of the timeout
                         return 30; // Reset countdown
                     }
@@ -564,7 +564,7 @@ export default function Home() {
                         <div className="mt-2">
                             <button
                                 disabled={addresses.length === 0 ? true : false}
-                                onClick={isConnected ? cloewebsocket : sendRequest}
+                                onClick={isConnected ? closeWebsocket : sendRequest}
                                 className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>{isConnected ? "Close Websocket" : "Open Websocket"}</span>
@@ -704,8 +704,8 @@ export default function Home() {
                     <div className="sm:col-span-6 sm:col-start-4 pb-24">
                         <div className="my-2">
                             <p className="text-white /50 text-xs font-light text-center">
-                                Helius websockets consume 1 credit per event push. This app is for testing and demo purposes.
-                                In order to preserve your credits, the websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
+                                This app is for testing and demo purposes.
+                                The websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
                             </p>
                         </div>
                     </div>
