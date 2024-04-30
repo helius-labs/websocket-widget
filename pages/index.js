@@ -178,7 +178,7 @@ export default function Home() {
 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://your-domain.com/" />
+                <meta property="og:url" content="https://helius.dev/" />
                 <meta property="og:title" content="Websocket Widget | Helius Labs" />
                 <meta property="og:description" content="Try the Geyser-enhanced websocket Widget by Helius Labs for streaming transactions in real-time." />
                 <meta property="og:image" content="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Fsocialpreview%2FVHFOgiKq7CnWnFYnekvU%2FHelius%20mark%20orange%20copy%2012.png?alt=media&amp;token=c68f65f2-0be5-4b2b-af5a-b8dcff08eed7" />
