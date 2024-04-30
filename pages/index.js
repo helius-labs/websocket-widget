@@ -3,6 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 import { ClockIcon, ArrowRightCircleIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { CursorArrowRaysIcon, SunIcon, MoonIcon } from "@heroicons/react/20/solid";
 import { Switch, Dialog, Transition, Popover, RadioGroup } from "@headlessui/react";
+import Head from 'next/head';
 
 const classNames = (...classes) => {
     return classes.filter(Boolean).join(' ');
@@ -169,6 +170,31 @@ export default function Home() {
 
     return (
         <>
+            <Head>
+                <title>WebSocket Widget | Helius Labs</title>
+                <meta name="description" content="Try the Geyser-enhanced WebSocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta name="keywords" content="WebSocket, Helius Labs, real-time data, API, widget, Solana transactions, push notifications" />
+                <meta name="author" content="Helius Labs" />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://your-domain.com/" />
+                <meta property="og:title" content="WebSocket Widget | Helius Labs" />
+                <meta property="og:description" content="Try the Geyser-enhanced WebSocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta property="og:image" content="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Fsocialpreview%2FVHFOgiKq7CnWnFYnekvU%2FHelius%20mark%20orange%20copy%2012.png?alt=media&amp;token=c68f65f2-0be5-4b2b-af5a-b8dcff08eed7" />
+
+                {/* Twitter */}
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content="https://twitter.com/heliuslabs" />
+                <meta property="twitter:title" content="WebSocket Widget | Helius Labs" />
+                <meta property="twitter:description" content="Try the Geyser-enhanced WebSocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta property="twitter:image" content="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Fsocialpreview%2FVHFOgiKq7CnWnFYnekvU%2FHelius%20mark%20orange%20copy%2012.png?alt=media&amp;token=c68f65f2-0be5-4b2b-af5a-b8dcff08eed7" />
+
+                {/* Additional tags for finer control if needed */}
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <link rel="icon" href="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Ficon%2Fvs43Kk95ooRrgM1M0epl%2FHelius%20mark%20orange%20copy%2016.png?alt=media&amp;token=5e565653-afcf-499a-85c6-59d36c1ffdb4" />
+            </Head>
             <div className="relative isolate">
                 <div
                     className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -313,7 +339,7 @@ export default function Home() {
                             Go Faster With<br /><span className="bg-gradient-to-r from-[#e3572e] via-orange-300 to-[#e3572e] inline-block text-transparent bg-clip-text">Websockets</span>
                         </h1>
                         <p className="text-lg leading-8 text-white  mt-8">
-                            Websockets keep a persistent connection open,<br />enabling real-time data exchange. Test the transactionSubscribe method on Mainnet below.
+                            Websockets keep a persistent connection open,<br />enabling real-time data exchange. Test the transactionSubscribe method on Mainnet.
                         </p>
                     </div>
                 </div>
@@ -675,7 +701,7 @@ export default function Home() {
                         </div>
                     </div>
 
-                    <div className="sm:col-span-6 sm:col-start-4">
+                    <div className="sm:col-span-6 sm:col-start-4 pb-24">
                         <div className="my-2">
                             <p className="text-white /50 text-xs font-light text-center">
                                 Helius websockets consume 1 credit per event push. This app is for testing and demo purposes.
@@ -683,19 +709,6 @@ export default function Home() {
                             </p>
                         </div>
                     </div>
-                </div>
-
-                <div
-                    className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
-                    aria-hidden="true"
-                >
-                    <div
-                        className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
-                        style={{
-                            clipPath:
-                                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-                        }}
-                    />
                 </div>
             </div>
         </>
