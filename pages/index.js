@@ -122,7 +122,7 @@ export default function Home() {
 
         if (!ws.current) {
             // Open websocket
-            ws.current = new Websocket(wsUrl);
+            ws.current = new WebSocket(wsUrl);
             ws.current.onopen = () => {
                 ws.current.send(JSON.stringify(request));
                 setIsConnected(true);
