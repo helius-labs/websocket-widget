@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useRef, Fragment } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { ClockIcon, ArrowRightCircleIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { CursorArrowRaysIcon, SunIcon, MoonIcon } from "@heroicons/react/20/solid";
-import { Switch, Dialog, Transition, Popover } from "@headlessui/react";
+import { Switch, Dialog, Transition, Popover, RadioGroup } from "@headlessui/react";
 
 const classNames = (...classes) => {
     return classes.filter(Boolean).join(' ');
@@ -18,9 +18,13 @@ export default function Home() {
     const [commitmentState, setCommitmentState] = useState("confirmed");
     const [details, setDetails] = useState("full");
     const [encoding, setEncoding] = useState("base58");
-    const [apiKey, setApiKey] = useState("");
     const [countdown, setCountdown] = useState(30);
     const [showNotif, setShowNotif] = useState(false);
+    const [includeVote, setIncludeVote] = useState(false);
+    const [includeFailed, setIncludeFailed] = useState(false);
+    const [showRewards, setShowRewards] = useState(false);
+    const apiKey = process.env.NEXT_PUBLIC_APIKEY;
+    const wsUrl = `wss://atlas-mainnet.helius-rpc.com?api-key=${apiKey}`;
 
     // Function to validate Solana address
     const validateAddress = (address) => {
@@ -101,13 +105,15 @@ export default function Home() {
             params: [
                 {
                     accountInclude: accountsIncluded,
-                    accountRequire: accountsRequired
+                    accountRequire: accountsRequired,
+                    vote: includeVote,
+                    failed: includeFailed
                 },
                 {
                     commitment: commitmentState,
                     encoding: encoding,
                     transactionDetails: details,
-                    showRewards: true,
+                    showRewards: showRewards,
                     maxSupportedTransactionVersion: 1
                 }
             ]
@@ -115,7 +121,6 @@ export default function Home() {
 
         if (!ws.current) {
             // Open WebSocket
-            const wsUrl = `wss://atlas-mainnet.helius-rpc.com?api-key=${apiKey}`;
             ws.current = new WebSocket(wsUrl);
             ws.current.onopen = () => {
                 ws.current.send(JSON.stringify(request));
@@ -314,27 +319,6 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-12">
-                    <div className="sm:col-span-6 sm:col-start-4">
-                        <label className="w-fit block text-sm font-medium leading-6 text-white  cursor-pointer duration-200 ease-in-out transition-smooth">
-                            <a
-                                className="flex items-center w-fit"
-                                href="https://dev.helius.xyz/dashboard/app"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Helius API Key
-                                <ArrowTopRightOnSquareIcon className="w-4 ml-1 enabled:text-white  enabled:fill-white" />
-                            </a>
-                        </label>
-                        <div className="mt-2">
-                            <input
-                                value={apiKey}
-                                onChange={event => setApiKey(event.target.value)}
-                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                            />
-                        </div>
-                    </div>
-
                     <div className="sm:col-span-4 sm:col-start-4">
                         <label className="block text-sm font-medium leading-6 text-white ">
                             Solana Address
@@ -354,7 +338,7 @@ export default function Home() {
                                 checked={isRequired}
                                 onChange={setIsRequired}
                                 className={classNames(
-                                    isRequired ? 'bg-orange-300/40' : 'bg-black/10 ',
+                                    isRequired ? 'bg-orange-300/40'  : 'bg-white/10 ',
                                     "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
                                 )}
                             >
@@ -376,7 +360,7 @@ export default function Home() {
                         <div className="mt-2">
                             <button
                                 onClick={addAddress}
-                                disabled={address.length === 0 || apiKey.length === 0}
+                                disabled={address.length === 0}
                                 className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>Add Address</span>
@@ -397,7 +381,7 @@ export default function Home() {
                                     )
                                     : (
                                         addresses.map(item => (
-                                            <div className="text-center shadow-sm border-0 ring-1 ring-inset ring-black/10   mx-4 my-2 h-10 rounded-md px-2 flex items-center justify-between text-white /50">
+                                            <div key={item.address} className="text-center shadow-sm border-0 ring-1 ring-inset ring-black/10   mx-4 my-2 h-10 rounded-md px-2 flex items-center justify-between text-white /50">
                                                 <span>
                                                     {item.address.slice(0, 6)}...{item.address.slice(-6)}
                                                 </span>
@@ -426,9 +410,9 @@ export default function Home() {
                                 onChange={(e) => setCommitmentState(e.target.value)}
                                 className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="confirmed" className="text-white/50">Confirmed</option>
-                                <option value="finalized" className="text-white/50">Finalized</option>
-                                <option value="processed" className="text-white/50">Processed</option>
+                                <option value="confirmed" className="text-gray-900">Confirmed</option>
+                                <option value="finalized" className="text-gray-900">Finalized</option>
+                                <option value="processed" className="text-gray-900">Processed</option>
                             </select>
                         </div>
                     </div>
@@ -442,10 +426,10 @@ export default function Home() {
                                 onChange={(e) => setDetails(e.target.value)}
                                 className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="full" className="text-white">Full</option>
-                                <option value="signatures" className="text-white">Signatures</option>
-                                <option value="accounts" className="text-white">Accounts</option>
-                                <option value="none" className="text-white">None</option>
+                                <option value="full" className="text-gray-900">Full</option>
+                                <option value="signatures" className="text-gray-900">Signatures</option>
+                                <option value="accounts" className="text-gray-900">Accounts</option>
+                                <option value="none" className="text-gray-900">None</option>
                             </select>
                         </div>
                     </div>
@@ -459,11 +443,94 @@ export default function Home() {
                                 onChange={(e) => setEncoding(e.target.value)}
                                 className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="base58" className="text-white">base58</option>
-                                <option value="base64" className="text-white">base64</option>
-                                <option value="base64+zstd" className="text-white">base64+zstd</option>
-                                <option value="jsonParsed" className="text-white">jsonParsed</option>
+                                <option value="base58" className="text-gray-900">base58</option>
+                                <option value="base64" className="text-gray-900">base64</option>
+                                <option value="base64+zstd" className="text-gray-900">base64+zstd</option>
+                                <option value="jsonParsed" className="text-gray-900">jsonParsed</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div className="sm:col-span-2 sm:col-start-4">
+                        <label className="block text-sm font-medium leading-6 text-white ">
+                                Failed
+                            </label>
+                            <div className="mt-2">
+                            <Switch.Group as="div" className="flex items-center mt-auto pb-2">
+                                <Switch
+                                    checked={includeFailed}
+                                    onChange={setIncludeFailed}
+                                    className={classNames(
+                                        includeFailed ? 'bg-orange-300/40'  : 'bg-white/10 ',
+                                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
+                                    )}
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className={classNames(
+                                            includeFailed ? 'translate-x-5' : 'translate-x-0',
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                        )}
+                                    />
+                                </Switch>
+                                <Switch.Label as="span" className="ml-3 text-sm">
+                                    <span className="font-medium text-white ">Include Failed Transactions</span>{' '}
+                                </Switch.Label>
+                            </Switch.Group>
+                        </div>
+                    </div>
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium leading-6 text-white ">
+                            Vote
+                        </label>
+                        <div className="mt-2">
+                        <Switch.Group as="div" className="flex items-center mt-auto pb-2">
+                            <Switch
+                                checked={includeVote}
+                                onChange={setIncludeVote}
+                                className={classNames(
+                                    includeVote ? 'bg-orange-300/40'  : 'bg-white/10 ',
+                                    "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
+                                )}
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    className={classNames(
+                                        includeVote ? 'translate-x-5' : 'translate-x-0',
+                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                    )}
+                                />
+                            </Switch>
+                            <Switch.Label as="span" className="ml-3 text-sm">
+                                <span className="font-medium text-white ">Include Vote Transactions</span>{' '}
+                            </Switch.Label>
+                        </Switch.Group>
+                        </div>
+                    </div>
+
+                    <div className="sm:col-span-2">  
+                        <label className="block text-sm font-medium leading-6 text-white ">
+                            Show Rewards
+                        </label>
+                        <div className="mt-2">
+                            <Switch.Group as="div" className="flex items-center mt-auto pb-2">
+                                <Switch
+                                    checked={showRewards}
+                                    onChange={setShowRewards}
+                                    className={classNames(
+                                        showRewards ? 'bg-orange-300/40'  : 'bg-white/10 ',
+                                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
+                                    )}
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className={classNames(
+                                            showRewards ? 'translate-x-5' : 'translate-x-0',
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                        )}
+                                    />
+                                </Switch>
+                            </Switch.Group>
                         </div>
                     </div>
 
@@ -498,15 +565,17 @@ export default function Home() {
                                         )
                                         : (
                                             notifications.reverse().map((notification, index) => (
-                                                notification.params &&
+                                                    notification.params && notification.params.result.transaction ? (
+
                                                 <Popover key={index} className="relative">
                                                     <Popover.Button className="w-full">
-                                                        <div className="transitiona-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white ">
-                                                            <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
-                                                            <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
-                                                            <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
-                                                        </div>
+                                                                <div className="transition-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white ">
+                                                                    <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
+                                                                    <span>{notification.params.result.transaction.meta.computeUnitsConsumed ? notification.params.result.transaction.meta.computeUnitsConsumed : `N/A`}</span>
+                                                                    <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
+                                                                </div>    
                                                     </Popover.Button>
+
 
                                                     <Transition
                                                         as={Fragment}
@@ -517,71 +586,88 @@ export default function Home() {
                                                         leaveFrom="opacity-100 translate-y-0"
                                                         leaveTo="opacity-0 translate-y-1"
                                                     >
-                                                        <Popover.Panel className="absolute left-1/2 z-10 mt-1 flex w-screen max-w-max -translate-x-1/2 px-4">
-                                                            <div className="w-screen max-w-md lg:max-w-xl flex-auto overflow-hidden rounded-lg bg-gray-400/90 backdrop-blur-sm text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
-                                                                <div className="grid grid-cols-1 gap-x-6 gap-y-1 p-4 lg:grid-cols-2">
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Method
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.method}</p>
+                                                    
+                                                                <Popover.Panel className="absolute left-1/2 z-10 mt-1 flex w-screen max-w-max -translate-x-1/2 px-4">
+                                                                <div className="w-screen max-w-md lg:max-w-xl flex-auto overflow-hidden rounded-lg bg-gray-400/90 backdrop-blur-sm text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
+                                                                    <div className="grid grid-cols-1 gap-x-6 gap-y-1 p-4 lg:grid-cols-2">
+    
+                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                            <div>
+                                                                                <p className="font-semibold text-gray-900">
+                                                                                    Method
+                                                                                    <span className="absolute inset-0" />
+                                                                                </p>
+                                                                                <p className="mt-1 text-gray-700">{notification.method}</p>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Transaction Version
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.params.result.transaction.version}</p>
+    
+                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                            <div>
+                                                                                <p className="font-semibold text-gray-900">
+                                                                                    Transaction Version
+                                                                                    <span className="absolute inset-0" />
+                                                                                </p>
+                                                                                <p className="mt-1 text-gray-700">{notification.params.result.transaction.version}</p>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Subscription
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.params.subscription}</p>
+    
+                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                            <div>
+                                                                                <p className="font-semibold text-gray-900">
+                                                                                    Subscription
+                                                                                    <span className="absolute inset-0" />
+                                                                                </p>
+                                                                                <p className="mt-1 text-gray-700">{notification.params.subscription}</p>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Encoding
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.params.result.transaction.transaction[1]}</p>
+    
+                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
+                                                                            <div>
+                                                                                <p className="font-semibold text-gray-900">
+                                                                                    Encoding
+                                                                                    <span className="absolute inset-0" />
+                                                                                </p>
+                                                                                <p className="mt-1 text-gray-700">{notification.params.result.transaction.transaction[1]}</p>
+                                                                            </div>
                                                                         </div>
+    
                                                                     </div>
-
+                                                                    <div className="px-8 py-6 bg-gray-500/50 hover:bg-gray-500/80 transition-color duration-200 ease-in-out">
+                                                                        <a
+                                                                            href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferer"
+                                                                        >
+                                                                            <div className="flex items-center gap-x-3">
+                                                                                <h3 className="text-sm font-semibold leading-6 text-gray-900">Transaction</h3>
+                                                                                <p className="rounded-full bg-orange-300/50 ring-1 ring-orange-400/50 px-2.5 py-1 text-xs font-semibold text-black">View</p>
+                                                                            </div>
+                                                                            <p className="mt-2 text-sm leading-6 text-gray-700">
+                                                                                {notification.params.result.signature.slice(0, 38)}...
+                                                                            </p>
+                                                                        </a>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="px-8 py-6 bg-gray-500/50 hover:bg-gray-500/80 transition-color duration-200 ease-in-out">
-                                                                    <a
-                                                                        href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferer"
-                                                                    >
-                                                                        <div className="flex items-center gap-x-3">
-                                                                            <h3 className="text-sm font-semibold leading-6 text-gray-900">Transaction</h3>
-                                                                            <p className="rounded-full bg-orange-300/50 ring-1 ring-orange-400/50 px-2.5 py-1 text-xs font-semibold text-black">View</p>
-                                                                        </div>
-                                                                        <p className="mt-2 text-sm leading-6 text-gray-700">
-                                                                            {notification.params.result.signature.slice(0, 38)}...
-                                                                        </p>
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </Popover.Panel>
+                                                            </Popover.Panel>
                                                     </Transition>
                                                 </Popover>
-                                            ))
+                                            ) : (
+                                                notification.params ? (
+                                                    <div className="transition-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white ">
+                                                        <a
+                                                            href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                            target="_blank"
+                                                            rel="noopener noreferer"
+                                                        >
+                                                            <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
+                                                        </a>
+                                                        <span>N/A</span>
+                                                        <span>N/A</span>
+                                                    </div>    
+                                                ) : (
+                                                    <></>
+                                                )
+                                            )))
                                         )
                                     }
                                 </div>
