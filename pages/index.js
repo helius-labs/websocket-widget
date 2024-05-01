@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState, useRef, Fragment } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { ClockIcon, ArrowRightCircleIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { CursorArrowRaysIcon, SunIcon, MoonIcon } from "@heroicons/react/20/solid";
-import { Switch, Dialog, Transition, Popover, RadioGroup } from "@headlessui/react";
+import { Switch, Dialog, Transition, Popover, RadioGroup, Tab } from "@headlessui/react";
 import Head from 'next/head';
+import JsonView from 'react18-json-view'
+import 'react18-json-view/src/style.css'
 
 const classNames = (...classes) => {
     return classes.filter(Boolean).join(' ');
@@ -82,9 +84,12 @@ export default function Home() {
     const closeWebsocket = useCallback(() => {
         if (ws.current) {
             ws.current.close();
-            ws.current = null;
-            setIsConnected(false);
-            setCountdown(30);
+            ws.current.onclose = () => {
+                ws.current = null;
+                setIsConnected(false);
+                setCountdown(30); // Reset countdown on websocket close
+            };
+
         }
     }, []);
 
@@ -141,13 +146,6 @@ export default function Home() {
 
     useEffect(() => {
         let countdownInterval;
-
-        if (ws.current) {
-            ws.current.onclose = () => {
-                setIsConnected(false);
-                setCountdown(30); // Reset countdown on websocket close
-            };
-        }
 
         if (isConnected && ws.current) {
             countdownInterval = setInterval(() => {
@@ -591,14 +589,19 @@ export default function Home() {
                                         )
                                         : (
                                             notifications.reverse().map((notification, index) => (
-                                                    notification.params && notification.params.result.transaction ? (
-
+                                                    notification.params &&
                                                 <Popover key={index} className="relative">
                                                     <Popover.Button className="w-full">
                                                                 <div className="transition-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white ">
-                                                                    <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
-                                                                    <span>{notification.params.result.transaction.meta.computeUnitsConsumed ? notification.params.result.transaction.meta.computeUnitsConsumed : `N/A`}</span>
-                                                                    <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
+                                                                    <a
+                                                                        href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferer"
+                                                                    >
+                                                                        <span className="hover:text-orange-300 hover:underline">{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
+                                                                    </a>
+                                                                    <span>{notification.params.result.transaction?.meta.computeUnitsConsumed ? notification.params.result.transaction.meta.computeUnitsConsumed : `N/A`}</span>
+                                                                    <span>{notification.params.result.transaction?.meta.fee ? notification.params.result.transaction.meta.fee / 1000000000 : "N/A"}</span>
                                                                 </div>    
                                                     </Popover.Button>
 
@@ -613,87 +616,65 @@ export default function Home() {
                                                         leaveTo="opacity-0 translate-y-1"
                                                     >
                                                     
-                                                                <Popover.Panel className="absolute left-1/2 z-10 mt-1 flex w-screen max-w-max -translate-x-1/2 px-4">
-                                                                <div className="w-screen max-w-md lg:max-w-xl flex-auto overflow-hidden rounded-lg bg-gray-400/90 backdrop-blur-sm text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
-                                                                    <div className="grid grid-cols-1 gap-x-6 gap-y-1 p-4 lg:grid-cols-2">
-    
-                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                            <div>
-                                                                                <p className="font-semibold text-gray-900">
-                                                                                    Method
-                                                                                    <span className="absolute inset-0" />
-                                                                                </p>
-                                                                                <p className="mt-1 text-gray-700">{notification.method}</p>
+                                                        <Popover.Panel className="absolute left-1/2 z-10 mt-1 flex w-screen max-w-max -translate-x-1/2 px-4">
+                                                            <div className="w-screen max-w-md lg:max-w-xl flex-auto overflow-hidden rounded-lg bg-gray-400/90 backdrop-blur-sm text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
+                                                                <Tab.Group>
+                                                                        <Tab.List className='w-full text-center flex flex-row justify-evenly text-lg px-4 py-2 space-x-4'>
+                                                                        <Tab as={Fragment} className="bg-gray-500/50 w-1/2">
+                                                                            {({ selected }) => (
+                                                                                <button
+                                                                                    className={`${
+                                                                                    selected
+                                                                                        ? 'bg-white/10 text-white'
+                                                                                        : 'text-gray-800'
+                                                                                    } w-full py-2 px-4 rounded-md`}
+                                                                                >
+                                                                                    Enriched Transaction
+                                                                                </button>
+                                                                            )}
+                                                                        </Tab>
+                                                                        <Tab as={Fragment} className="bg-gray-500/50 w-1/2">
+                                                                            {({ selected }) => (
+                                                                                <button
+                                                                                    className={`${
+                                                                                    selected
+                                                                                        ? 'bg-white/10 text-white'
+                                                                                        : 'text-gray-800'
+                                                                                    } w-full py-2 px-4 rounded-md`}
+                                                                                >
+                                                                                    View Raw JSON
+                                                                                </button>
+                                                                            )}
+                                                                        </Tab>
+                                                                        </Tab.List>
+                                                                        <Tab.Panels>
+                                                                            <Tab.Panel>
+                                                                            <div className="px-8 py-6 bg-gray-500/50 hover:bg-gray-500/80 transition-color duration-200 ease-in-out">
+                                                                                <a
+                                                                                    href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferer"
+                                                                                >
+                                                                                    <div className="flex items-center gap-x-3">
+                                                                                        <h3 className="text-sm font-semibold leading-6 text-gray-900">Enriched Transaction</h3>
+                                                                                        <p className="rounded-full bg-orange-300/50 ring-1 ring-orange-400/50 px-2.5 py-1 text-xs font-semibold text-black">View</p>
+                                                                                    </div>
+                                                                                    <p className="mt-2 text-sm leading-6 text-gray-700">
+                                                                                        {notification.params.result.signature.slice(0, 38)}...
+                                                                                    </p>
+                                                                                </a>
                                                                             </div>
-                                                                        </div>
-    
-                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                            <div>
-                                                                                <p className="font-semibold text-gray-900">
-                                                                                    Transaction Version
-                                                                                    <span className="absolute inset-0" />
-                                                                                </p>
-                                                                                <p className="mt-1 text-gray-700">{notification.params.result.transaction.version}</p>
-                                                                            </div>
-                                                                        </div>
-    
-                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                            <div>
-                                                                                <p className="font-semibold text-gray-900">
-                                                                                    Subscription
-                                                                                    <span className="absolute inset-0" />
-                                                                                </p>
-                                                                                <p className="mt-1 text-gray-700">{notification.params.subscription}</p>
-                                                                            </div>
-                                                                        </div>
-    
-                                                                        <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                            <div>
-                                                                                <p className="font-semibold text-gray-900">
-                                                                                    Encoding
-                                                                                    <span className="absolute inset-0" />
-                                                                                </p>
-                                                                                <p className="mt-1 text-gray-700">{notification.params.result.transaction.transaction[1]}</p>
-                                                                            </div>
-                                                                        </div>
-    
-                                                                    </div>
-                                                                    <div className="px-8 py-6 bg-gray-500/50 hover:bg-gray-500/80 transition-color duration-200 ease-in-out">
-                                                                        <a
-                                                                            href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferer"
-                                                                        >
-                                                                            <div className="flex items-center gap-x-3">
-                                                                                <h3 className="text-sm font-semibold leading-6 text-gray-900">Transaction</h3>
-                                                                                <p className="rounded-full bg-orange-300/50 ring-1 ring-orange-400/50 px-2.5 py-1 text-xs font-semibold text-black">View</p>
-                                                                            </div>
-                                                                            <p className="mt-2 text-sm leading-6 text-gray-700">
-                                                                                {notification.params.result.signature.slice(0, 38)}...
-                                                                            </p>
-                                                                        </a>
-                                                                    </div>
+                                                                            </Tab.Panel>
+                                                                            <Tab.Panel>
+                                                                                <JsonView src={notification} className="bg-gray-500/50 p-4" theme="vscode" collapseStringMode="word" collapseObjectsAfterLength={3} collapseStringsAfterLength={24}/>
+                                                                            </Tab.Panel>
+                                                                        </Tab.Panels>
+                                                                    </Tab.Group> 
                                                                 </div>
                                                             </Popover.Panel>
                                                     </Transition>
                                                 </Popover>
-                                            ) : (
-                                                notification.params ? (
-                                                    <div className="transition-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white ">
-                                                        <a
-                                                            href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
-                                                            target="_blank"
-                                                            rel="noopener noreferer"
-                                                        >
-                                                            <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
-                                                        </a>
-                                                        <span>N/A</span>
-                                                        <span>N/A</span>
-                                                    </div>    
-                                                ) : (
-                                                    <></>
-                                                )
-                                            )))
+                                            ))
                                         )
                                     }
                                 </div>
