@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState, useRef, Fragment } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { ClockIcon, ArrowRightCircleIcon, CubeTransparentIcon, ChatBubbleOvalLeftEllipsisIcon, XCircleIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { CursorArrowRaysIcon, SunIcon, MoonIcon } from "@heroicons/react/20/solid";
-import { Switch, Dialog, Transition, Popover } from "@headlessui/react";
+import { Switch, Dialog, Transition, Popover, RadioGroup, Tab } from "@headlessui/react";
+import Head from 'next/head';
+import JsonView from 'react18-json-view'
+import 'react18-json-view/src/style.css'
 
 const classNames = (...classes) => {
     return classes.filter(Boolean).join(' ');
@@ -18,10 +21,13 @@ export default function Home() {
     const [commitmentState, setCommitmentState] = useState("confirmed");
     const [details, setDetails] = useState("full");
     const [encoding, setEncoding] = useState("base58");
-    const [apiKey, setApiKey] = useState("");
     const [countdown, setCountdown] = useState(30);
     const [showNotif, setShowNotif] = useState(false);
-    const [theme, setTheme] = useState('dark');
+    const [includeVote, setIncludeVote] = useState(false);
+    const [includeFailed, setIncludeFailed] = useState(false);
+    const [showRewards, setShowRewards] = useState(false);
+    const apiKey = process.env.NEXT_PUBLIC_APIKEY;
+    const wsUrl = `wss://atlas-mainnet.helius-rpc.com?api-key=${apiKey}`;
 
     // Function to validate Solana address
     const validateAddress = (address) => {
@@ -33,7 +39,7 @@ export default function Home() {
             try {
                 const pubkey = new PublicKey(address);
                 // Check if the encoded address has the typical length of 43 characters
-                if (pubkey.toBase58().length === 43) {
+                if (PublicKey.isOnCurve(pubkey.toBytes())) {
                     return true;
                 } else {
                     alert('Invalid Solana address');
@@ -75,12 +81,15 @@ export default function Home() {
         }
     };
 
-    const cloeWebSocket = useCallback(() => {
+    const closeWebsocket = useCallback(() => {
         if (ws.current) {
             ws.current.close();
-            ws.current = null;
-            setIsConnected(false);
-            setCountdown(30);
+            ws.current.onclose = () => {
+                ws.current = null;
+                setIsConnected(false);
+                setCountdown(30); // Reset countdown on websocket close
+            };
+
         }
     }, []);
 
@@ -102,21 +111,22 @@ export default function Home() {
             params: [
                 {
                     accountInclude: accountsIncluded,
-                    accountRequire: accountsRequired
+                    accountRequire: accountsRequired,
+                    vote: includeVote,
+                    failed: includeFailed
                 },
                 {
                     commitment: commitmentState,
                     encoding: encoding,
                     transactionDetails: details,
-                    showRewards: true,
+                    showRewards: showRewards,
                     maxSupportedTransactionVersion: 1
                 }
             ]
         };
 
         if (!ws.current) {
-            // Open WebSocket
-            const wsUrl = `wss://atlas-mainnet.helius-rpc.com?api-key=${apiKey}`;
+            // Open websocket
             ws.current = new WebSocket(wsUrl);
             ws.current.onopen = () => {
                 ws.current.send(JSON.stringify(request));
@@ -133,36 +143,16 @@ export default function Home() {
             setNotifications((prevNotifications) => [...prevNotifications, message]);
         };
     }, [apiKey, addresses, commitmentState, details, encoding]);
-    
-    useEffect(() => {
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        setTheme(currentTheme);
-        document.documentElement.classList.toggle('dark', currentTheme === 'dark');
-    }, []);
-    
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-        document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    };
 
     useEffect(() => {
         let countdownInterval;
-
-        if (ws.current) {
-            ws.current.onclose = () => {
-                setIsConnected(false);
-                setCountdown(30); // Reset countdown on WebSocket close
-            };
-        }
 
         if (isConnected && ws.current) {
             countdownInterval = setInterval(() => {
                 setCountdown((prevCountdown) => {
                     if (prevCountdown === 1) {
                         clearInterval(countdownInterval);
-                        cloeWebSocket(); // Close WebSocket when countdown reaches zero
+                        closeWebsocket(); // Close websocket when countdown reaches zero
                         setShowNotif(true); // Notify the user of the timeout
                         return 30; // Reset countdown
                     }
@@ -178,6 +168,31 @@ export default function Home() {
 
     return (
         <>
+            <Head>
+                <title>Websocket Widget | Helius Labs</title>
+                <meta name="description" content="Try the Geyser-enhanced websocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta name="keywords" content="websocket, Helius Labs, real-time data, API, widget, Solana transactions, push notifications" />
+                <meta name="author" content="Helius Labs" />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="https://helius.dev/" />
+                <meta property="og:title" content="Websocket Widget | Helius Labs" />
+                <meta property="og:description" content="Try the Geyser-enhanced websocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta property="og:image" content="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Fsocialpreview%2FVHFOgiKq7CnWnFYnekvU%2FHelius%20mark%20orange%20copy%2012.png?alt=media&amp;token=c68f65f2-0be5-4b2b-af5a-b8dcff08eed7" />
+
+                {/* Twitter */}
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content="https://twitter.com/heliuslabs" />
+                <meta property="twitter:title" content="Websocket Widget | Helius Labs" />
+                <meta property="twitter:description" content="Try the Geyser-enhanced websocket Widget by Helius Labs for streaming transactions in real-time." />
+                <meta property="twitter:image" content="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Fsocialpreview%2FVHFOgiKq7CnWnFYnekvU%2FHelius%20mark%20orange%20copy%2012.png?alt=media&amp;token=c68f65f2-0be5-4b2b-af5a-b8dcff08eed7" />
+
+                {/* Additional tags for finer control if needed */}
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <link rel="icon" href="https://409032945-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FRwfXvzjmfXR1F6rkUj5B%2Ficon%2Fvs43Kk95ooRrgM1M0epl%2FHelius%20mark%20orange%20copy%2016.png?alt=media&amp;token=5e565653-afcf-499a-85c6-59d36c1ffdb4" />
+            </Head>
             <div className="relative isolate">
                 <div
                     className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -236,7 +251,7 @@ export default function Home() {
                                         <div className="mt-5 sm:mt-6">
                                             <button
                                                 type="button"
-                                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-black/80 enabled:hover:ring-orange-200/20 enabled:hover:bg-black/50 py-2 text-gray-800 dark:text-gray-200/10 enabled:text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  sm:text-sm sm:leading-6"
+                                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-black/80 enabled:hover:ring-orange-200/20 enabled:hover:bg-black/50 py-2 text-white /10 enabled:text-white  shadow-sm ring-1 ring-inset ring-black/10   sm:text-sm sm:leading-6"
                                                 onClick={() => setShowNotif(false)}
                                             >
                                                 Return
@@ -253,7 +268,6 @@ export default function Home() {
                     <a
                         href="https://www.helius.dev/"
                         className=""
-                        href="https://github.com/helius-labs/websocket-widget"
                         target="_blank"
                     >
                         <svg width="46" height="46" viewBox="0 0 494 490" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -274,23 +288,6 @@ export default function Home() {
                         </svg>
                     </a>
                     <div className="flex flex-row space-x-4">
-                        <button
-                            onClick={toggleTheme}
-                            className="flex justify-center items-center ring-1 ring-white/50 hover:ring-orange-300/50 rounded-full h-8 px-4 transition-color duration-200 ease-in-out hover:bg-white/10"
-                            aria-label="Toggle Dark Mode"
-                            >
-                            {theme === 'light' ? (
-                                <>
-                                <SunIcon className="h-5 w-5 text-gray-800 mr-2" />
-                                <span className="text-sm font-medium text-gray-800">LIGHT</span>
-                                </>
-                            ) : (
-                                <>
-                                <MoonIcon className="h-5 w-5 text-gray-200 mr-2" />
-                                <span className="text-sm font-medium text-gray-200">DARK</span>
-                                </>
-                            )}
-                        </button>
                         <a 
                         href="https://github.com/helius-labs/websocket-widget"
                         target="_blank"
@@ -322,7 +319,7 @@ export default function Home() {
                             rel="noopener noreferrer"
                             className="group flex justify-center"
                         >
-                            <div className="relative flex items-center rounded-full text-opacity-70 group-hover:text-opacity-100 border border-white border-opacity-20 bg-opacity-25 px-4 py-1 text-xs leading-6 text-gray-800 dark:text-gray-200 transition-all duration-200 ease-in-out hover:bg-black/10 group-hover:border-opacity-60 group-hover:bg-opacity-75 sm:px-3 sm:text-sm">
+                            <div className="relative flex items-center rounded-full text-opacity-70 group-hover:text-opacity-100 border border-white border-opacity-20 bg-opacity-25 px-4 py-1 text-xs leading-6 text-white  transition-all duration-200 ease-in-out hover:bg-black/10 group-hover:border-opacity-60 group-hover:bg-opacity-75 sm:px-3 sm:text-sm">
                                 Want to learn more?{" "}
 
                                 <span className="mx-2 h-4 border-l border-white/20" />
@@ -336,46 +333,25 @@ export default function Home() {
                         </a>
                     </div>
                     <div className="text-center mt-8">
-                        <h1 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-200 sm:text-6xl">
+                        <h1 className="text-4xl font-bold tracking-tight text-white  sm:text-6xl">
                             Go Faster With<br /><span className="bg-gradient-to-r from-[#e3572e] via-orange-300 to-[#e3572e] inline-block text-transparent bg-clip-text">Websockets</span>
                         </h1>
-                        <p className="text-lg leading-8 text-gray-800 dark:text-gray-200 mt-8">
-                            Websockets keep a persistent connection open,<br />enabling real-time data exchange. Test the transactionSubscribe method on Mainnet below.
+                        <p className="text-lg leading-8 text-white  mt-8">
+                            Websockets keep a persistent connection open,<br />enabling real-time data exchange. Test the transactionSubscribe method on Mainnet.
                         </p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-12">
-                    <div className="sm:col-span-6 sm:col-start-4">
-                        <label className="w-fit block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200 cursor-pointer duration-200 ease-in-out transition-smooth">
-                            <a
-                                className="flex items-center w-fit"
-                                href="https://dev.helius.xyz/dashboard/app"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Helius API Key
-                                <ArrowTopRightOnSquareIcon className="w-4 ml-1 enabled:text-gray-800 dark:text-gray-200 enabled:fill-white" />
-                            </a>
-                        </label>
-                        <div className="mt-2">
-                            <input
-                                value={apiKey}
-                                onChange={event => setApiKey(event.target.value)}
-                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                            />
-                        </div>
-                    </div>
-
                     <div className="sm:col-span-4 sm:col-start-4">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Solana Address
                         </label>
                         <div className="mt-2">
                             <input
                                 value={address}
                                 onChange={event => setAddress(event.target.value)}
-                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                                className="overflow-x-scroll px-2 block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
                             />
                         </div>
                     </div>
@@ -386,7 +362,7 @@ export default function Home() {
                                 checked={isRequired}
                                 onChange={setIsRequired}
                                 className={classNames(
-                                    isRequired ? 'bg-orange-300/40' : 'bg-black/10 dark:bg-white/10',
+                                    isRequired ? 'bg-orange-300/40'  : 'bg-white/10 ',
                                     "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
                                 )}
                             >
@@ -399,7 +375,7 @@ export default function Home() {
                                 />
                             </Switch>
                             <Switch.Label as="span" className="ml-3 text-sm">
-                                <span className="font-medium text-gray-800 dark:text-gray-200">Is Required</span>{' '}
+                                <span className="font-medium text-white ">Is Required</span>{' '}
                             </Switch.Label>
                         </Switch.Group>
                     </div>
@@ -408,28 +384,28 @@ export default function Home() {
                         <div className="mt-2">
                             <button
                                 onClick={addAddress}
-                                disabled={address.length === 0 || apiKey.length === 0}
-                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-gray-800 dark:text-gray-200/10 enabled:text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
+                                disabled={address.length === 0}
+                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>Add Address</span>
-                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-gray-800 dark:text-gray-200 enabled:fill-white" />
+                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-white  enabled:fill-white" />
                             </button>
                         </div>
                     </div>
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="my-2">
-                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-52 overflow-y-scroll">
+                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-52 overflow-y-scroll">
                                 {addresses.length === 0
                                     ? (
-                                        <div className="flex flex-col items-center justify-center text-center gap-y-2 text-gray-800 dark:text-gray-200/30 border border-dashed border-white/10 rounded-md w-64 h-5/6 mx-auto translate-y-4 bg-gray-500/5">
+                                        <div className="flex flex-col items-center justify-center text-center gap-y-2 text-white /30 border border-dashed border-white/10 rounded-md w-64 h-5/6 mx-auto translate-y-4 bg-gray-500/5">
                                             <CubeTransparentIcon className="w-8" />
                                             Enter an address<br /> to get started
                                         </div>
                                     )
                                     : (
                                         addresses.map(item => (
-                                            <div className="text-center shadow-sm border-0 ring-1 ring-inset ring-black/10 dark:ring-white/10  mx-4 my-2 h-10 rounded-md px-2 flex items-center justify-between text-gray-800 dark:text-gray-200/50">
+                                            <div key={item.address} className="text-center shadow-sm border-0 ring-1 ring-inset ring-black/10   mx-4 my-2 h-10 rounded-md px-2 flex items-center justify-between text-white /50">
                                                 <span>
                                                     {item.address.slice(0, 6)}...{item.address.slice(-6)}
                                                 </span>
@@ -450,52 +426,135 @@ export default function Home() {
                     </div>
 
                     <div className="sm:col-span-2 sm:col-start-4">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Commitment
                         </label>
                         <div className="mt-2">
                             <select
                                 onChange={(e) => setCommitmentState(e.target.value)}
-                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="confirmed" className="text-gray-800">Confirmed</option>
-                                <option value="finalized" className="text-gray-800">Finalized</option>
-                                <option value="processed" className="text-gray-800">Processed</option>
+                                <option value="confirmed" className="text-gray-900">Confirmed</option>
+                                <option value="finalized" className="text-gray-900">Finalized</option>
+                                <option value="processed" className="text-gray-900">Processed</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Details
                         </label>
                         <div className="mt-2">
                             <select
                                 onChange={(e) => setDetails(e.target.value)}
-                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="full" className="text-gray-800">Full</option>
-                                <option value="signatures" className="text-gray-800">Signatures</option>
-                                <option value="accounts" className="text-gray-800">Accounts</option>
-                                <option value="none" className="text-gray-800">None</option>
+                                <option value="full" className="text-gray-900">Full</option>
+                                <option value="signatures" className="text-gray-900">Signatures</option>
+                                <option value="accounts" className="text-gray-900">Accounts</option>
+                                <option value="none" className="text-gray-900">None</option>
                             </select>
                         </div>
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium leading-6 text-gray-800 dark:text-gray-200">
+                        <label className="block text-sm font-medium leading-6 text-white ">
                             Encoding
                         </label>
                         <div className="mt-2">
                             <select
                                 onChange={(e) => setEncoding(e.target.value)}
-                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
+                                className="transition-all duration-200 ease-in-out cursor-pointer block w-full rounded-md border-0 bg-white/5 hover:ring-orange-200/20 hover:bg-white/10 py-2 px-1 text-gray-400 shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm"
                             >
-                                <option value="base58" className="text-gray-800">base58</option>
-                                <option value="base64" className="text-gray-800">base64</option>
-                                <option value="base64+zstd" className="text-gray-800">base64+zstd</option>
-                                <option value="jsonParsed" className="text-gray-800">jsonParsed</option>
+                                <option value="base58" className="text-gray-900">base58</option>
+                                <option value="base64" className="text-gray-900">base64</option>
+                                <option value="base64+zstd" className="text-gray-900">base64+zstd</option>
+                                <option value="jsonParsed" className="text-gray-900">jsonParsed</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div className="sm:col-span-2 sm:col-start-4">
+                        <label className="block text-sm font-medium leading-6 text-white ">
+                                Failed
+                            </label>
+                            <div className="mt-2">
+                            <Switch.Group as="div" className="flex items-center mt-auto pb-2">
+                                <Switch
+                                    checked={includeFailed}
+                                    onChange={setIncludeFailed}
+                                    className={classNames(
+                                        includeFailed ? 'bg-orange-300/40'  : 'bg-white/10 ',
+                                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
+                                    )}
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className={classNames(
+                                            includeFailed ? 'translate-x-5' : 'translate-x-0',
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                        )}
+                                    />
+                                </Switch>
+                                <Switch.Label as="span" className="ml-3 text-sm">
+                                    <span className="font-medium text-white ">Include Failed Transactions</span>{' '}
+                                </Switch.Label>
+                            </Switch.Group>
+                        </div>
+                    </div>
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium leading-6 text-white ">
+                            Vote
+                        </label>
+                        <div className="mt-2">
+                        <Switch.Group as="div" className="flex items-center mt-auto pb-2">
+                            <Switch
+                                checked={includeVote}
+                                onChange={setIncludeVote}
+                                className={classNames(
+                                    includeVote ? 'bg-orange-300/40'  : 'bg-white/10 ',
+                                    "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
+                                )}
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    className={classNames(
+                                        includeVote ? 'translate-x-5' : 'translate-x-0',
+                                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                    )}
+                                />
+                            </Switch>
+                            <Switch.Label as="span" className="ml-3 text-sm">
+                                <span className="font-medium text-white ">Include Vote Transactions</span>{' '}
+                            </Switch.Label>
+                        </Switch.Group>
+                        </div>
+                    </div>
+
+                    <div className="sm:col-span-2">  
+                        <label className="block text-sm font-medium leading-6 text-white ">
+                            Show Rewards
+                        </label>
+                        <div className="mt-2">
+                            <Switch.Group as="div" className="flex items-center mt-auto pb-2">
+                                <Switch
+                                    checked={showRewards}
+                                    onChange={setShowRewards}
+                                    className={classNames(
+                                        showRewards ? 'bg-orange-300/40'  : 'bg-white/10 ',
+                                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out"
+                                    )}
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className={classNames(
+                                            showRewards ? 'translate-x-5' : 'translate-x-0',
+                                            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                        )}
+                                    />
+                                </Switch>
+                            </Switch.Group>
                         </div>
                     </div>
 
@@ -503,19 +562,19 @@ export default function Home() {
                         <div className="mt-2">
                             <button
                                 disabled={addresses.length === 0 ? true : false}
-                                onClick={isConnected ? cloeWebSocket : sendRequest}
-                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-gray-800 dark:text-gray-200/10 enabled:text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
+                                onClick={isConnected ? closeWebsocket : sendRequest}
+                                className="disabled:cursor-not-allowed flex items-center justify-center transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 enabled:hover:ring-orange-200/20 enabled:hover:bg-white/10 py-2 text-white/10 enabled:text-white shadow-sm ring-1 ring-inset ring-black/10 focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6"
                             >
                                 <span>{isConnected ? "Close Websocket" : "Open Websocket"}</span>
-                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-gray-800 dark:text-gray-200 enabled:fill-white" />
+                                <CursorArrowRaysIcon className="w-5 ml-1 enabled:text-white  enabled:fill-white" />
                             </button>
                         </div>
                     </div>
 
                     <div className="sm:col-span-6 sm:col-start-4">
                         <div className="my-2">
-                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-gray-800 dark:text-gray-200 shadow-sm ring-1 ring-inset ring-black/10 dark:ring-white/10  focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-96 overflow-y-scroll overflow-x-hidden">
-                                <div className="grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10 dark:ring-white/10  mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center bg-white/5 text-gray-800 dark:text-gray-200">
+                            <div className="transition-color duration-200 ease-in-out block w-full rounded-md border-0 bg-white/5 py-2 text-white  shadow-sm ring-1 ring-inset ring-black/10   focus:ring-2 focus:ring-inset focus:ring-orange-300/40 sm:text-sm sm:leading-6 h-96 overflow-y-scroll overflow-x-hidden">
+                                <div className="grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center bg-white/5 text-white ">
                                     <span>Transaction</span>
                                     <span>Compute Units</span>
                                     <span>Fee (SOL)</span>
@@ -523,22 +582,29 @@ export default function Home() {
                                 <div className="h-full">
                                     {notifications.length === 0
                                         ? (
-                                            <div className="flex flex-col items-center justify-center text-center gap-y-2 text-gray-800 dark:text-gray-200/30 border border-dashed border-white/10 rounded-md w-64 h-3/6 mx-auto translate-y-16 bg-gray-500/5">
+                                            <div className="flex flex-col items-center justify-center text-center gap-y-2 text-white /30 border border-dashed border-white/10 rounded-md w-64 h-3/6 mx-auto translate-y-16 bg-gray-500/5">
                                                 <ChatBubbleOvalLeftEllipsisIcon className="w-8" />
                                                 Websocket feed will<br /> display here
                                             </div>
                                         )
                                         : (
                                             notifications.reverse().map((notification, index) => (
-                                                notification.params &&
+                                                    notification.params &&
                                                 <Popover key={index} className="relative">
                                                     <Popover.Button className="w-full">
-                                                        <div className="transitiona-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10 dark:ring-white/10  hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-gray-800 dark:text-gray-200">
-                                                            <span>{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
-                                                            <span>{notification.params.result.transaction.meta.computeUnitsConsumed}</span>
-                                                            <span>{notification.params.result.transaction.meta.fee / 1000000000}</span>
-                                                        </div>
+                                                                <div className="transition-colors duration-100 ease-in-out grid grid-cols-3 shadow-sm border-0 ring-1 ring-inset ring-black/10   hover:ring-orange-300/30 hover:bg-white/5 mx-4 my-2 h-10 rounded-md px-2 flex items-center text-center text-white ">
+                                                                    <a
+                                                                        href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferer"
+                                                                    >
+                                                                        <span className="hover:text-orange-300 hover:underline">{notification.params.result.signature.slice(0, 3)}..{notification.params.result.signature.slice(-3)}</span>
+                                                                    </a>
+                                                                    <span>{notification.params.result.transaction?.meta.computeUnitsConsumed ? notification.params.result.transaction.meta.computeUnitsConsumed : `N/A`}</span>
+                                                                    <span>{notification.params.result.transaction?.meta.fee ? notification.params.result.transaction.meta.fee / 1000000000 : "N/A"}</span>
+                                                                </div>    
                                                     </Popover.Button>
+
 
                                                     <Transition
                                                         as={Fragment}
@@ -549,68 +615,63 @@ export default function Home() {
                                                         leaveFrom="opacity-100 translate-y-0"
                                                         leaveTo="opacity-0 translate-y-1"
                                                     >
+                                                    
                                                         <Popover.Panel className="absolute left-1/2 z-10 mt-1 flex w-screen max-w-max -translate-x-1/2 px-4">
                                                             <div className="w-screen max-w-md lg:max-w-xl flex-auto overflow-hidden rounded-lg bg-gray-400/90 backdrop-blur-sm text-sm leading-6 shadow-lg ring-1 ring-gray-900/5">
-                                                                <div className="grid grid-cols-1 gap-x-6 gap-y-1 p-4 lg:grid-cols-2">
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Method
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.method}</p>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Transaction Version
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.params.result.transaction.version}</p>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Subscription
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.params.subscription}</p>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="group relative flex gap-x-6 rounded-lg p-4">
-                                                                        <div>
-                                                                            <p className="font-semibold text-gray-900">
-                                                                                Encoding
-                                                                                <span className="absolute inset-0" />
-                                                                            </p>
-                                                                            <p className="mt-1 text-gray-700">{notification.params.result.transaction.transaction[1]}</p>
-                                                                        </div>
-                                                                    </div>
-
+                                                                <Tab.Group>
+                                                                        <Tab.List className='w-full text-center flex flex-row justify-evenly text-lg px-4 py-2 space-x-4'>
+                                                                        <Tab as={Fragment} className="bg-gray-500/50 w-1/2">
+                                                                            {({ selected }) => (
+                                                                                <button
+                                                                                    className={`${
+                                                                                    selected
+                                                                                        ? 'bg-white/10 text-white'
+                                                                                        : 'text-gray-800'
+                                                                                    } w-full py-2 px-4 rounded-md`}
+                                                                                >
+                                                                                    Enriched Transaction
+                                                                                </button>
+                                                                            )}
+                                                                        </Tab>
+                                                                        <Tab as={Fragment} className="bg-gray-500/50 w-1/2">
+                                                                            {({ selected }) => (
+                                                                                <button
+                                                                                    className={`${
+                                                                                    selected
+                                                                                        ? 'bg-white/10 text-white'
+                                                                                        : 'text-gray-800'
+                                                                                    } w-full py-2 px-4 rounded-md`}
+                                                                                >
+                                                                                    View Raw JSON
+                                                                                </button>
+                                                                            )}
+                                                                        </Tab>
+                                                                        </Tab.List>
+                                                                        <Tab.Panels>
+                                                                            <Tab.Panel>
+                                                                            <div className="px-8 py-6 bg-gray-500/50 hover:bg-gray-500/80 transition-color duration-200 ease-in-out">
+                                                                                <a
+                                                                                    href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferer"
+                                                                                >
+                                                                                    <div className="flex items-center gap-x-3">
+                                                                                        <h3 className="text-sm font-semibold leading-6 text-gray-900">Enriched Transaction</h3>
+                                                                                        <p className="rounded-full bg-orange-300/50 ring-1 ring-orange-400/50 px-2.5 py-1 text-xs font-semibold text-black">View</p>
+                                                                                    </div>
+                                                                                    <p className="mt-2 text-sm leading-6 text-gray-700">
+                                                                                        {notification.params.result.signature.slice(0, 38)}...
+                                                                                    </p>
+                                                                                </a>
+                                                                            </div>
+                                                                            </Tab.Panel>
+                                                                            <Tab.Panel>
+                                                                                <JsonView src={notification} className="bg-gray-500/50 p-4" theme="vscode" collapseStringMode="word" collapseObjectsAfterLength={3} collapseStringsAfterLength={24}/>
+                                                                            </Tab.Panel>
+                                                                        </Tab.Panels>
+                                                                    </Tab.Group> 
                                                                 </div>
-                                                                <div className="px-8 py-6 bg-gray-500/50 hover:bg-gray-500/80 transition-color duration-200 ease-in-out">
-                                                                    <a
-                                                                        href={`https://xray.helius.xyz/tx/${notification.params.result.signature}?network=mainnet`}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferer"
-                                                                    >
-                                                                        <div className="flex items-center gap-x-3">
-                                                                            <h3 className="text-sm font-semibold leading-6 text-gray-900">Transaction</h3>
-                                                                            <p className="rounded-full bg-orange-300/50 ring-1 ring-orange-400/50 px-2.5 py-1 text-xs font-semibold text-black">View</p>
-                                                                        </div>
-                                                                        <p className="mt-2 text-sm leading-6 text-gray-700">
-                                                                            {notification.params.result.signature.slice(0, 38)}...
-                                                                        </p>
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </Popover.Panel>
+                                                            </Popover.Panel>
                                                     </Transition>
                                                 </Popover>
                                             ))
@@ -621,27 +682,14 @@ export default function Home() {
                         </div>
                     </div>
 
-                    <div className="sm:col-span-6 sm:col-start-4">
+                    <div className="sm:col-span-6 sm:col-start-4 pb-24">
                         <div className="my-2">
-                            <p className="text-gray-800 dark:text-gray-200/50 text-xs font-light text-center">
-                                Helius websockets consume 1 credit per event push. This app is for testing and demo purposes.
-                                In order to preserve your credits, the websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
+                            <p className="text-white /50 text-xs font-light text-center">
+                                This app is for testing and demo purposes.
+                                The websocket stream will automatically close after <span className="underline underline-offset-2">{countdown} seconds</span>.
                             </p>
                         </div>
                     </div>
-                </div>
-
-                <div
-                    className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
-                    aria-hidden="true"
-                >
-                    <div
-                        className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
-                        style={{
-                            clipPath:
-                                'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-                        }}
-                    />
                 </div>
             </div>
         </>
